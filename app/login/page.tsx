@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -12,6 +12,16 @@ import {
 } from "@/components/AuthShell";
 
 export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={<AuthShell title="Sign in" subtitle="Loading…">{null}</AuthShell>}
+    >
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
