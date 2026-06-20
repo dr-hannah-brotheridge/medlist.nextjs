@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand: refined clinical teal */
+  --color-brand-50: #f0faf7;
+  --color-brand-100: #d7f0e8;
+  --color-brand-200: #b0e1d2;
+  --color-brand-300: #7fccb7;
+  --color-brand-400: #4eb198;
+  --color-brand-500: #2f9680;
+  --color-brand-600: #237867;
+  --color-brand-700: #1f6155;
+  --color-brand-800: #1c4e46;
+  --color-brand-900: #19413b;
+
+  /* Neutral clinical surfaces */
+  --color-surface: #f7f9fb;
+  --color-card: #ffffff;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    Helvetica, Arial, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: #0f172a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Respect device safe areas for the fixed bottom nav */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide number input spinners for a cleaner clinical look */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
