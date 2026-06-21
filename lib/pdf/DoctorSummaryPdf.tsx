@@ -205,6 +205,8 @@ export function DoctorSummaryPdf({
     year: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone: "Pacific/Auckland",
+    timeZoneName: "short",
   });
 
   return (
