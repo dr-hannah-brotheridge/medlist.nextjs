@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -22,8 +23,14 @@ const LINKS = [
 
 export function HamburgerDrawer() {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  // Portal target (document.body) is only available on the client.
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close the drawer once navigation actually lands (don't close on click,
   // which can interrupt the Link navigation).
@@ -59,8 +66,9 @@ export function HamburgerDrawer() {
         <MenuIcon />
       </button>
 
-      {open ? (
-        <div className="fixed inset-0 z-50">
+      {open && mounted
+        ? createPortal(
+            <div className="fixed inset-0 z-50">
           <button
             aria-label="Close menu"
             onClick={() => setOpen(false)}
@@ -98,8 +106,10 @@ export function HamburgerDrawer() {
               </button>
             </div>
           </div>
-        </div>
-      ) : null}
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
