@@ -12,7 +12,7 @@ const CARDS = [
   {
     href: "/search",
     title: "Search Meds",
-    desc: "Look up purpose, dosage, and side effects",
+    desc: "Look up dosage, common uses, and side effects",
     Icon: SearchIcon,
     tint: "bg-brand-50 text-brand-600",
   },

@@ -25,6 +25,18 @@ export default function AboutPage() {
           — Dr Hannah Brotheridge (MBChB), Christchurch, New Zealand
         </p>
       </div>
+
+      <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-sm leading-relaxed text-slate-600">
+          MedList was designed by Dr Hannah Brotheridge (MBChB), a
+          Christchurch-based medical practitioner, out of a personal commitment
+          to improving health literacy and patient independence. Dr Brotheridge
+          acts purely in her capacity as the technical software designer and
+          system developer. Your use of this tool does not create an active
+          doctor–patient relationship, and her system-level administrative
+          review does not replace individual clinical consulting.
+        </p>
+      </div>
     </div>
   );
 }

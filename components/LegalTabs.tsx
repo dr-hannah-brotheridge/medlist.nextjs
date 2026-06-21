@@ -102,6 +102,14 @@ function Disclaimer() {
         self-diagnose or self-medicate. Always refer to the medication package
         insert and consult your prescribing clinician or pharmacist.
       </P>
+      <P>
+        While all clinical reference structures are subject to human-in-the-loop
+        review protocols against local frameworks, the user acknowledges that
+        AI-assisted translation modules can exhibit informational anomalies,
+        localised discrepancies, or omissions. MedList and its operators make no
+        guarantees regarding algorithmic perfection and accept no liability for
+        data anomalies emerging from automated synthesis models.
+      </P>
       <H>4. Medication Database and Brand Name Updates</H>
       <P>
         The MedList medication database, including brand names, is reviewed and
@@ -169,19 +177,32 @@ function Terms() {
       </P>
       <H>5. Third-Party Services</H>
       <P>
-        MedList uses Supabase (supabase.com) for data storage and authentication.
-        Your use is also subject to Supabase&apos;s terms of service and privacy
-        policy.
+        MedList is built with Next.js and hosted on Vercel (vercel.com); data
+        storage and authentication are provided by Supabase (supabase.com). Your
+        use of MedList is also subject to the terms of service and privacy
+        policies of these providers.
       </P>
-      <H>6. Governing Law</H>
+      <H>6. Educational Content & AI Assistance</H>
+      <P>
+        The educational medication content within MedList has been created with
+        AI assistance and validated by Dr Hannah Brotheridge (MBChB). While all
+        clinical reference structures are subject to human-in-the-loop review
+        protocols against local frameworks, the user acknowledges that AI-assisted
+        translation modules can exhibit informational anomalies, localised
+        discrepancies, or omissions. MedList and its operators make no guarantees
+        regarding algorithmic perfection and accept no liability for data
+        anomalies emerging from automated synthesis models. We may update,
+        modify, or remove educational content at any time without notice.
+      </P>
+      <H>7. Governing Law</H>
       <P>
         These Terms are governed by the laws of New Zealand and subject to the
         exclusive jurisdiction of the New Zealand courts.
       </P>
-      <H>7. Contact</H>
+      <H>8. Contact</H>
       <P>
         Dr Hannah Brotheridge, Developer, MedList — Christchurch, New Zealand.
-        Email: hannah.brotheridge@cdhb.health.nz
+        Email: hannah.brotheridge@gmail.com
       </P>
     </div>
   );
@@ -227,7 +248,7 @@ function Privacy() {
       <P>
         Under the Privacy Act 2020 you may access, correct, or request deletion
         of your information. To exercise these rights, contact
-        hannah.brotheridge@cdhb.health.nz. If unsatisfied, you may contact the NZ
+        hannah.brotheridge@gmail.com. If unsatisfied, you may contact the NZ
         Office of the Privacy Commissioner (www.privacy.org.nz, 0800 803 909).
       </P>
       <H>Data Retention</H>

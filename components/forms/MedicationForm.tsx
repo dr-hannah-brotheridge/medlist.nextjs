@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { MedicationFormValues } from "@/lib/types";
 import { fieldClass, labelClass } from "@/components/AuthShell";
 import { SpinnerIcon } from "@/components/icons";
+import { LogbookAckGate } from "@/components/LogbookAckGate";
 
 interface Props {
   mode: "create" | "edit";
@@ -15,6 +16,7 @@ interface Props {
   brands?: string | null;
   recordId?: number;
   initial: MedicationFormValues;
+  logbookAccepted: boolean;
 }
 
 const EMPTY: MedicationFormValues = {
@@ -33,6 +35,7 @@ export function MedicationForm({
   brands,
   recordId,
   initial,
+  logbookAccepted,
 }: Props) {
   const router = useRouter();
   // All editing happens in LOCAL state — zero server round-trips per keystroke.
@@ -106,6 +109,7 @@ export function MedicationForm({
   }
 
   return (
+    <LogbookAckGate userId={userId} initialAccepted={logbookAccepted}>
     <form onSubmit={onSave} className="space-y-5">
       <div className="rounded-xl border border-slate-200 bg-card p-4">
         <h2 className="text-base font-semibold text-slate-900">
@@ -214,5 +218,6 @@ export function MedicationForm({
         </button>
       ) : null}
     </form>
+    </LogbookAckGate>
   );
 }
