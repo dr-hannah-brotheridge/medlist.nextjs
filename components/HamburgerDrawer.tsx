@@ -66,7 +66,7 @@ export function HamburgerDrawer() {
             onClick={() => setOpen(false)}
             className="absolute inset-0 bg-slate-900/40"
           />
-          <div className="absolute right-0 top-0 flex h-full w-72 max-w-[80%] flex-col bg-card shadow-xl">
+          <div className="absolute inset-y-0 right-0 flex w-72 max-w-[80%] flex-col overflow-y-auto bg-card shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
               <span className="text-lg font-bold text-brand-600">MedList</span>
               <button
@@ -77,7 +77,7 @@ export function HamburgerDrawer() {
                 <CloseIcon />
               </button>
             </div>
-            <nav className="flex-1 overflow-y-auto p-2">
+            <nav className="p-2">
               {LINKS.map(({ href, label, Icon }) => (
                 <Link
                   key={href}
@@ -89,7 +89,7 @@ export function HamburgerDrawer() {
                 </Link>
               ))}
             </nav>
-            <div className="border-t border-slate-200 p-3">
+            <div className="mt-auto border-t border-slate-200 p-3">
               <button
                 onClick={signOut}
                 className="w-full rounded-lg border border-red-200 px-4 py-2.5 font-semibold text-red-600 transition hover:bg-red-50"
