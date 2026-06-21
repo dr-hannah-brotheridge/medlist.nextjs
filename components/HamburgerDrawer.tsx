@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   MenuIcon,
@@ -23,6 +23,23 @@ const LINKS = [
 export function HamburgerDrawer() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Close the drawer once navigation actually lands (don't close on click,
+  // which can interrupt the Link navigation).
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
+
+  // Prevent the page behind the drawer from scrolling while it's open.
+  useEffect(() => {
+    if (!open) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [open]);
 
   async function signOut() {
     const supabase = createClient();
@@ -65,7 +82,6 @@ export function HamburgerDrawer() {
                 <Link
                   key={href}
                   href={href}
-                  onClick={() => setOpen(false)}
                   className="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-700 transition hover:bg-brand-50 hover:text-brand-700"
                 >
                   <Icon width={20} height={20} />

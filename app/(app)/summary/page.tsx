@@ -53,7 +53,7 @@ export default async function SummaryPage() {
         <Card
           icon={<UserIcon width={18} height={18} />}
           title="Profile Information"
-          editHref="/settings"
+          editHref="/settings?next=/summary"
         >
           <Grid>
             <Item label="Full Name" value={fullName || null} />
@@ -65,7 +65,7 @@ export default async function SummaryPage() {
         <Card
           icon={<AlertIcon width={18} height={18} />}
           title="Emergency Contact"
-          editHref="/settings"
+          editHref="/settings?next=/summary"
         >
           <Grid>
             <Item label="Contact Name" value={d?.emergency_contact_name} />
@@ -76,7 +76,7 @@ export default async function SummaryPage() {
         <Card
           icon={<AlertIcon width={18} height={18} />}
           title="Allergies"
-          editHref="/settings"
+          editHref="/settings?next=/summary"
         >
           <p className="text-slate-700">
             {d?.allergies || (
@@ -88,7 +88,7 @@ export default async function SummaryPage() {
         <Card
           icon={<ShieldIcon width={18} height={18} />}
           title="Healthcare Providers"
-          editHref="/settings"
+          editHref="/settings?next=/summary"
         >
           <Grid>
             <Item label="GP / Doctor" value={d?.primary_gp} />

@@ -7,7 +7,15 @@ import type { PatientDetails } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function SettingsPage() {
+export default async function SettingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  // Only honour internal paths to avoid open-redirects.
+  const redirectTo = next && next.startsWith("/") ? next : undefined;
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,6 +38,7 @@ export default async function SettingsPage() {
       />
       <ProfileForm
         userId={user.id}
+        redirectTo={redirectTo}
         initial={{
           first_name: d?.first_name ?? "",
           last_name: d?.last_name ?? "",

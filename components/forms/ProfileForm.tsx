@@ -10,9 +10,11 @@ import { SpinnerIcon, UserIcon, AlertIcon, ShieldIcon } from "@/components/icons
 export function ProfileForm({
   userId,
   initial,
+  redirectTo,
 }: {
   userId: string;
   initial: ProfileFormValues;
+  redirectTo?: string;
 }) {
   const router = useRouter();
   // Local-only state: typing never touches the network.
@@ -62,6 +64,11 @@ export function ProfileForm({
     }
     setSaving(false);
     setSaved(true);
+    if (redirectTo) {
+      router.push(redirectTo);
+      router.refresh();
+      return;
+    }
     router.refresh();
   }
 
