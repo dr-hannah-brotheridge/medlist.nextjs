@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
 import { DownloadIcon, SpinnerIcon } from "@/components/icons";
 
 function triggerDownload(href: string, filename: string) {
@@ -15,85 +14,32 @@ function triggerDownload(href: string, filename: string) {
 }
 
 export function DownloadSummaryButton({ userId }: { userId: string }) {
+  // userId kept in the API for parity/consistency; auth is cookie-based.
+  void userId;
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function onDownload() {
     setError(null);
     setLoading(true);
-    const supabase = createClient();
 
     try {
-      const { data, error } = await supabase.functions.invoke(
-        "generate-doctor-summary",
-        { body: { user_id: userId } },
-      );
-      if (error) throw error;
-
-      const filename = "medlist-doctor-summary.pdf";
-
-      // Shape 1: a Blob (PDF bytes returned directly).
-      if (data instanceof Blob) {
-        const url = URL.createObjectURL(data);
-        triggerDownload(url, filename);
-        setTimeout(() => URL.revokeObjectURL(url), 4000);
+      const res = await fetch("/summary/pdf", { credentials: "same-origin" });
+      if (!res.ok) {
+        throw new Error(`Could not generate the summary (${res.status}).`);
       }
-      // Shape 2: JSON with a signed URL.
-      else if (data && typeof data === "object" && "url" in data) {
-        triggerDownload(String((data as { url: string }).url), filename);
-      }
-      // Shape 3: a raw string that is a URL.
-      else if (typeof data === "string" && data.startsWith("http")) {
-        triggerDownload(data, filename);
-      } else {
-        // Fallback: raw fetch so binary isn't mis-parsed as text.
-        await rawFetchFallback(userId, filename);
-      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      triggerDownload(url, "medlist-doctor-summary.pdf");
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
     } catch (e) {
-      try {
-        await rawFetchFallback(userId, "medlist-doctor-summary.pdf");
-      } catch {
-        setError(
-          e instanceof Error ? e.message : "Could not generate the summary.",
-        );
-      }
+      setError(
+        e instanceof Error ? e.message : "Could not generate the summary.",
+      );
     } finally {
       setLoading(false);
     }
-  }
-
-  async function rawFetchFallback(uid: string, filename: string) {
-    const supabase = createClient();
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-doctor-summary`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          Authorization: `Bearer ${session?.access_token ?? ""}`,
-        },
-        body: JSON.stringify({ user_id: uid }),
-      },
-    );
-    if (!res.ok) throw new Error(`Summary failed (${res.status})`);
-
-    const contentType = res.headers.get("content-type") ?? "";
-    if (contentType.includes("application/json")) {
-      const json = await res.json();
-      if (json?.url) {
-        triggerDownload(String(json.url), filename);
-        return;
-      }
-      throw new Error("Unexpected response from summary function.");
-    }
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-    triggerDownload(url, filename);
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
 
   return (
