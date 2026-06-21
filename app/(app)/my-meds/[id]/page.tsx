@@ -31,6 +31,13 @@ export default async function EditMedicationPage({
   if (!data) notFound();
   const med = data as PatientMedicationWithRef;
 
+  const { data: pd } = await supabase
+    .from("patient_details")
+    .select("logbook_ack_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  const logbookAccepted = Boolean(pd?.logbook_ack_at);
+
   return (
     <div>
       <Link
@@ -55,6 +62,7 @@ export default async function EditMedicationPage({
           start_date: toISODate(med.start_date),
           end_date: toISODate(med.end_date),
         }}
+        logbookAccepted={logbookAccepted}
       />
     </div>
   );

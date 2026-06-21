@@ -36,6 +36,7 @@ export interface PatientDetails {
   primary_gp: string | null;
   pharmacy_name: string | null;
   pharmacy_phone: string | null;
+  logbook_ack_at: string | null; // ISO timestamp of logbook acknowledgment
   updated_at: string | null;
 }
 

@@ -40,6 +40,13 @@ export default async function NewMedicationPage({
 
   if (!med) notFound();
 
+  const { data: pd } = await supabase
+    .from("patient_details")
+    .select("logbook_ack_at")
+    .eq("id", user.id)
+    .maybeSingle();
+  const logbookAccepted = Boolean(pd?.logbook_ack_at);
+
   return (
     <div>
       <Link
@@ -57,6 +64,7 @@ export default async function NewMedicationPage({
         medicationName={med.medication_name}
         brands={med.brands}
         initial={EMPTY}
+        logbookAccepted={logbookAccepted}
       />
     </div>
   );
