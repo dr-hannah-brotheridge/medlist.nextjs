@@ -3,9 +3,13 @@ import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { PageTitle } from "@/components/AppChrome";
 import { MedicationForm } from "@/components/forms/MedicationForm";
+import { MedicationPhotos } from "@/components/MedicationPhotos";
 import { ChevronLeftIcon } from "@/components/icons";
 import { toISODate } from "@/lib/date";
-import type { PatientMedicationWithRef } from "@/lib/types";
+import type {
+  PatientMedicationWithRef,
+  MedicationPhotoWithUrl,
+} from "@/lib/types";
 
 export default async function EditMedicationPage({
   params,
@@ -38,6 +42,22 @@ export default async function EditMedicationPage({
     .maybeSingle();
   const logbookAccepted = Boolean(pd?.logbook_ack_at);
 
+  // Fetch existing photos + signed URLs for display.
+  const { data: photoRows } = await supabase
+    .from("medication_photos")
+    .select("*")
+    .eq("patient_medication_id", med.id)
+    .order("position", { ascending: true });
+
+  const photos: MedicationPhotoWithUrl[] = [];
+  for (const row of photoRows ?? []) {
+    const r = row as Omit<MedicationPhotoWithUrl, "url">;
+    const { data: signed } = await supabase.storage
+      .from("medication-photos")
+      .createSignedUrl(r.storage_path, 3600);
+    photos.push({ ...r, url: signed?.signedUrl ?? "" });
+  }
+
   return (
     <div>
       <Link
@@ -48,6 +68,15 @@ export default async function EditMedicationPage({
         Back to My Meds
       </Link>
       <PageTitle title="Medication Details" />
+
+      <div className="mb-5">
+        <MedicationPhotos
+          userId={user.id}
+          patientMedicationId={med.id}
+          initial={photos}
+        />
+      </div>
+
       <MedicationForm
         mode="edit"
         userId={user.id}

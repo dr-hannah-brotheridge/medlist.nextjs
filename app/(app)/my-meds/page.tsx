@@ -65,6 +65,11 @@ export default async function MyMedsPage() {
                     <span className="block font-semibold text-slate-900">
                       {name}
                     </span>
+                    {m.total_medications?.brands ? (
+                      <span className="block text-sm text-slate-500">
+                        {m.total_medications.brands}
+                      </span>
+                    ) : null}
                     {dose ? (
                       <span className="block text-sm text-slate-600">
                         {dose}
