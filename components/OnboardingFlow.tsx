@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
 import {
   fieldClass,
   labelClass,
@@ -18,17 +17,21 @@ import {
   CheckIcon,
   SpinnerIcon,
 } from "@/components/icons";
+import {
+  writeOnboardingDraft,
+  type OnboardingDraft,
+} from "@/lib/onboarding";
 
 type Role = "myself" | "caregiver" | null;
 
 const TOTAL_STEPS = 4;
 
 /**
- * 4-step onboarding wizard rendered after a user's first successful auth.
- * Persists `onboarded_at`, `caregiver_role`, and core profile fields, then
- * routes to the Home dashboard.
+ * 4-step pre-auth onboarding wizard. Draft answers are written to
+ * localStorage and then synced to `patient_details` after the user signs in.
+ * Completing the wizard routes the visitor to `/signup`.
  */
-export function OnboardingFlow({ userId }: { userId: string }) {
+export function OnboardingFlow() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState<"next" | "back">("next");
@@ -56,37 +59,23 @@ export function OnboardingFlow({ userId }: { userId: string }) {
     setStep((s) => Math.max(s - 1, 0));
   }
 
-  async function onComplete(e: React.FormEvent) {
+  function onComplete(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSaving(true);
 
-    const supabase = createClient();
-    const [first, ...rest] = fullName.trim().split(/\s+/);
-    const last = rest.join(" ");
+    const draft: OnboardingDraft = {
+      role,
+      fullName: fullName.trim(),
+      nhi: nhi.trim(),
+      allergies: allergies.trim(),
+    };
+    writeOnboardingDraft(draft);
 
-    const { error } = await supabase.from("patient_details").upsert(
-      {
-        id: userId,
-        first_name: first || null,
-        last_name: last || null,
-        nhi_number: nhi.trim() || null,
-        allergies: allergies.trim() || null,
-        caregiver_role: role,
-        onboarded_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id" },
-    );
-
-    if (error) {
-      setError(error.message);
-      setSaving(false);
-      return;
-    }
-
-    router.push("/home");
-    router.refresh();
+    // Route to signup. If the visitor is somehow already authenticated
+    // (e.g. returning user revisiting `/`), middleware will bounce them
+    // to /home and the post-auth sync will write the draft to the DB.
+    router.push("/signup");
   }
 
   return (

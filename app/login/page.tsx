@@ -4,6 +4,7 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { syncOnboardingDraft } from "@/lib/onboarding";
 import {
   AuthShell,
   fieldClass,
@@ -34,7 +35,7 @@ function LoginForm() {
     setError(null);
     setLoading(true);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
@@ -42,6 +43,10 @@ function LoginForm() {
       setError(error.message);
       setLoading(false);
       return;
+    }
+    // Sync any pre-auth onboarding draft to the user's profile row.
+    if (data.user) {
+      await syncOnboardingDraft(data.user.id);
     }
     const dest = searchParams.get("redirectedFrom") || "/home";
     router.push(dest);

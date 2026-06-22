@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { syncOnboardingDraft } from "@/lib/onboarding";
 import {
   AuthShell,
   fieldClass,
@@ -41,11 +42,13 @@ export default function SignupPage() {
       setLoading(false);
       return;
     }
-    // If email confirmation is required, there is no active session yet.
-    if (data.session) {
+    // Sync the pre-auth onboarding draft (if any) to the new profile row.
+    if (data.user) {
+      await syncOnboardingDraft(data.user.id);
       router.push("/home");
       router.refresh();
     } else {
+      // Email confirmation required — keep the draft so it syncs on first login.
       setNotice(
         "Account created. Please check your email to confirm your address, then sign in.",
       );
