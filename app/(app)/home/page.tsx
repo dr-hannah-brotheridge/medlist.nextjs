@@ -13,14 +13,14 @@ const CARDS = [
   {
     href: "/search",
     title: "Search Meds",
-    desc: "Look up dosage, common uses, and side effects",
+    desc: "Look up brands, common uses, and side effects",
     Icon: SearchIcon,
     tint: "bg-brand-50 text-brand-600",
   },
   {
     href: "/my-meds",
     title: "My Medications",
-    desc: "Track your current medications",
+    desc: "Track your current medications and add photos of your pills",
     Icon: PillIcon,
     tint: "bg-emerald-50 text-emerald-600",
   },
