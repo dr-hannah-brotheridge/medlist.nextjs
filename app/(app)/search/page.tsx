@@ -10,7 +10,7 @@ export default async function SearchPage() {
   const { data, error } = await supabase
     .from("total_medications")
     .select("id, medication_name, brands")
-    .order("medication_name", { ascending: true });
+    .order("medication_name", { ascending: true }).limit(10000);
 
   if (error) {
     return (

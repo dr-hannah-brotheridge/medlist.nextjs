@@ -23,6 +23,14 @@ export interface MedicationListItem {
   brands: string | null;
 }
 
+/** NZULM trade/brand lookup entry (secondary relational table). */
+export interface NzulmLookupRow {
+  id: number;
+  generic_medication_id: number;
+  brand_name: string;
+  concept_id: string | null;
+}
+
 /** Per-user profile. `id` IS the auth user id (1:1, FK to auth.users). */
 export interface PatientDetails {
   id: string;

@@ -57,7 +57,7 @@ export function SearchList({ rows }: { rows: MedicationListItem[] }) {
               >
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-medium text-slate-900">
-                    {r.medication_name}
+                    {r.medication_name || "Unnamed medication"}
                   </span>
                   {r.brands ? (
                     <span className="block truncate text-sm text-slate-500">

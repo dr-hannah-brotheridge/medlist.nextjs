@@ -4,20 +4,6 @@ import { createClient } from "@/lib/supabase/server";
 import type { TotalMedication } from "@/lib/types";
 import { ChevronLeftIcon, PlusIcon, AlertIcon } from "@/components/icons";
 
-const SECTIONS: { key: keyof TotalMedication; label: string }[] = [
-  { key: "why_it_is_prescribed", label: "Why it's prescribed" },
-  { key: "what_it_does_in_the_body", label: "What it does in your body" },
-  {
-    key: "what_organ_or_condition_it_protects",
-    label: "What it protects",
-  },
-  { key: "common_dose_range", label: "Common dose range" },
-  { key: "side_effects", label: "Common side effects" },
-  { key: "what_symptoms_to_watch_for", label: "Symptoms to watch for" },
-  { key: "what_happens_if_you_stop_it", label: "If you stop taking it" },
-  { key: "when_to_seek_help", label: "When to seek help" },
-];
-
 export default async function MedicationDetailPage({
   params,
 }: {
@@ -37,6 +23,29 @@ export default async function MedicationDetailPage({
   if (!data) notFound();
   const med = data as TotalMedication;
 
+  // LAYER 4: Runtime safety — local string fallbacks so the detail view never
+  // throws or collapses layout when background LLM enrichment is unconfigured.
+  // Every nullable text field resolves to a friendly placeholder instead of
+  // vanishing from the DOM.
+  const genericNameText = med.medication_name || "Unknown Medication";
+  const brandsText = med.brands || "Brand information coming soon.";
+  const drugClassText = med.drug_class || null; // chip only shown when present
+  const whatItIsUsedForText =
+    med.why_it_is_prescribed || "Information details coming soon.";
+  const bodyMechanismText =
+    med.what_it_does_in_the_body || "Information details coming soon.";
+  const whatItProtectsText =
+    med.what_organ_or_condition_it_protects ||
+    "Information details coming soon.";
+  const ifYouStopText =
+    med.what_happens_if_you_stop_it || "Information details coming soon.";
+  const doseRangeText = med.common_dose_range || "Information details coming soon.";
+  const sideEffectsText = med.side_effects || "Information details coming soon.";
+  const symptomsToWatchText =
+    med.what_symptoms_to_watch_for || "Information details coming soon.";
+  const whenToSeekHelpText =
+    med.when_to_seek_help || "Information details coming soon.";
+
   return (
     <div>
       <Link
@@ -50,34 +59,65 @@ export default async function MedicationDetailPage({
       {/* Header: generic name with brand name(s) beneath */}
       <header className="mb-5">
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          {med.medication_name}
+          {genericNameText}
         </h1>
-        {med.brands ? (
-          <p className="mt-0.5 text-base text-slate-500">{med.brands}</p>
-        ) : null}
-        {med.drug_class ? (
+        <p className="mt-0.5 text-base text-slate-500">{brandsText}</p>
+        {drugClassText ? (
           <span className="mt-2 inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
-            {med.drug_class}
+            {drugClassText}
           </span>
         ) : null}
       </header>
 
       <div className="space-y-3">
-        {SECTIONS.map(({ key, label }) => {
-          const value = med[key];
-          if (!value) return null;
-          return (
-            <section
-              key={key}
-              className="rounded-xl border border-slate-200 bg-card p-4"
-            >
-              <h2 className="text-sm font-semibold text-brand-700">{label}</h2>
-              <p className="mt-1 whitespace-pre-line text-slate-700">
-                {value}
-              </p>
-            </section>
-          );
-        })}
+        <section className="rounded-xl border border-slate-200 bg-card p-4">
+          <h2 className="text-sm font-semibold text-brand-700">Why it's prescribed</h2>
+          <p className="mt-1 whitespace-pre-line text-slate-700">
+            {whatItIsUsedForText}
+          </p>
+        </section>
+        <section className="rounded-xl border border-slate-200 bg-card p-4">
+          <h2 className="text-sm font-semibold text-brand-700">What it does in your body</h2>
+          <p className="mt-1 whitespace-pre-line text-slate-700">
+            {bodyMechanismText}
+          </p>
+        </section>
+        <section className="rounded-xl border border-slate-200 bg-card p-4">
+          <h2 className="text-sm font-semibold text-brand-700">What it protects</h2>
+          <p className="mt-1 whitespace-pre-line text-slate-700">
+            {whatItProtectsText}
+          </p>
+        </section>
+        <section className="rounded-xl border border-slate-200 bg-card p-4">
+          <h2 className="text-sm font-semibold text-brand-700">Common dose range</h2>
+          <p className="mt-1 whitespace-pre-line text-slate-700">
+            {doseRangeText}
+          </p>
+        </section>
+        <section className="rounded-xl border border-slate-200 bg-card p-4">
+          <h2 className="text-sm font-semibold text-brand-700">Common side effects</h2>
+          <p className="mt-1 whitespace-pre-line text-slate-700">
+            {sideEffectsText}
+          </p>
+        </section>
+        <section className="rounded-xl border border-slate-200 bg-card p-4">
+          <h2 className="text-sm font-semibold text-brand-700">Symptoms to watch for</h2>
+          <p className="mt-1 whitespace-pre-line text-slate-700">
+            {symptomsToWatchText}
+          </p>
+        </section>
+        <section className="rounded-xl border border-slate-200 bg-card p-4">
+          <h2 className="text-sm font-semibold text-brand-700">If you stop taking it</h2>
+          <p className="mt-1 whitespace-pre-line text-slate-700">
+            {ifYouStopText}
+          </p>
+        </section>
+        <section className="rounded-xl border border-slate-200 bg-card p-4">
+          <h2 className="text-sm font-semibold text-brand-700">When to seek help</h2>
+          <p className="mt-1 whitespace-pre-line text-slate-700">
+            {whenToSeekHelpText}
+          </p>
+        </section>
       </div>
 
       <Link
