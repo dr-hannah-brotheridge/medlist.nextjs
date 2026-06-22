@@ -76,6 +76,27 @@ export interface MedicationPhotoWithUrl extends MedicationPhoto {
   url: string;
 }
 
+/** Structured dosage captured in the medication form, composed into the
+ *  free-text `dosage` column on save (e.g. "500mg Tablet - Take 2 Tablets"). */
+export type DosageUnit = "mg" | "mcg" | "g" | "mL" | "Units" | "";
+export type DosageForm =
+  | "Tablet"
+  | "Capsule"
+  | "Puff"
+  | "Ointment/Topical Application"
+  | "Suppository"
+  | "Wafer"
+  | "Liquid"
+  | "Injection"
+  | "";
+
+export interface DosageDraft {
+  strength: string;
+  unit: DosageUnit;
+  quantity: string;
+  form: DosageForm;
+}
+
 /** Editable patient-owned fields on the medication form. */
 export interface MedicationFormValues {
   dosage: string;
