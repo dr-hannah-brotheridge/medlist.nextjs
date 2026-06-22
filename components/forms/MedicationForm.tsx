@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type {
@@ -10,8 +11,12 @@ import type {
   MedicationFormValues,
 } from "@/lib/types";
 import { fieldClass, labelClass } from "@/components/AuthShell";
-import { SpinnerIcon, AlertIcon } from "@/components/icons";
+import { SpinnerIcon, AlertIcon, BookOpenIcon } from "@/components/icons";
 import { LogbookAckGate } from "@/components/LogbookAckGate";
+import {
+  parseBrands,
+  formatBrandPreviewWithSelected,
+} from "@/lib/medicationHelpers";
 
 interface Props {
   mode: "create" | "edit";
@@ -23,6 +28,9 @@ interface Props {
   recordId?: number;
   initial: MedicationFormValues;
   logbookAccepted: boolean;
+  /** Optional slot rendered between the educational CTA and the dosage
+   *  fieldset (e.g. the MedicationPhotos uploader on the edit page). */
+  photosSlot?: React.ReactNode;
 }
 
 const UNITS: DosageUnit[] = ["mg", "mcg", "g", "mL", "Units"];
@@ -157,6 +165,7 @@ export function MedicationForm({
   recordId,
   initial,
   logbookAccepted,
+  photosSlot,
 }: Props) {
   const router = useRouter();
 
@@ -273,8 +282,29 @@ export function MedicationForm({
           <h2 className="mt-1 text-base font-semibold text-slate-900">
             {medicationName}
           </h2>
-          {brands ? <p className="text-sm text-slate-500">{brands}</p> : null}
+          {brands ? (
+            <p className="truncate text-sm text-slate-500">
+              {formatBrandPreviewWithSelected(
+                parseBrands(brands),
+                selectedBrand,
+                3,
+              )}
+            </p>
+          ) : null}
         </div>
+
+        {/* Premium educational guide CTA */}
+        <Link
+          href={`/search/${medicationId}`}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-brand-500 bg-brand-50 px-4 py-3.5 font-semibold text-brand-700 transition hover:bg-brand-100"
+        >
+          <BookOpenIcon width={20} height={20} />
+          View Educational Details
+        </Link>
+
+        {/* Optional photos slot (e.g. medication uploader on edit page) */}
+
+        {photosSlot ?? null}
 
         {/* Structured dosage section */}
         <fieldset className="space-y-4 rounded-xl border border-slate-200 bg-card p-4">

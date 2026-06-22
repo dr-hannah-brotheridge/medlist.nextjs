@@ -69,20 +69,13 @@ export default async function EditMedicationPage({
       </Link>
       <PageTitle title="Medication Details" />
 
-      <div className="mb-5">
-        <MedicationPhotos
-          userId={user.id}
-          patientMedicationId={med.id}
-          initial={photos}
-        />
-      </div>
-
       <MedicationForm
         mode="edit"
         userId={user.id}
         medicationId={med.medication_id}
         medicationName={med.total_medications?.medication_name ?? "Medication"}
         brands={med.total_medications?.brands}
+        selectedBrand={med.selected_brand}
         recordId={med.id}
         initial={{
           dosage: med.dosage ?? "",
@@ -92,6 +85,13 @@ export default async function EditMedicationPage({
           end_date: toISODate(med.end_date),
         }}
         logbookAccepted={logbookAccepted}
+        photosSlot={
+          <MedicationPhotos
+            userId={user.id}
+            patientMedicationId={med.id}
+            initial={photos}
+          />
+        }
       />
     </div>
   );

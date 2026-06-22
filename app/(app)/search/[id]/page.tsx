@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { TotalMedication } from "@/lib/types";
 import { ChevronLeftIcon, PlusIcon, AlertIcon } from "@/components/icons";
+import { parseBrands, formatBrandPreview } from "@/lib/medicationHelpers";
 
 export default async function MedicationDetailPage({
   params,
@@ -28,7 +29,7 @@ export default async function MedicationDetailPage({
   // Every nullable text field resolves to a friendly placeholder instead of
   // vanishing from the DOM.
   const genericNameText = med.medication_name || "Unknown Medication";
-  const brandsText = med.brands || "Brand information coming soon.";
+  const brandsPreview = formatBrandPreview(parseBrands(med.brands), 3);
   const drugClassText = med.drug_class || null; // chip only shown when present
   const whatItIsUsedForText =
     med.why_it_is_prescribed || "Information details coming soon.";
@@ -61,7 +62,11 @@ export default async function MedicationDetailPage({
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           {genericNameText}
         </h1>
-        <p className="mt-0.5 text-base text-slate-500">{brandsText}</p>
+        {brandsPreview ? (
+          <p className="mt-0.5 truncate text-base text-slate-500">
+            {brandsPreview}
+          </p>
+        ) : null}
         {drugClassText ? (
           <span className="mt-2 inline-block rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
             {drugClassText}

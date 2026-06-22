@@ -17,9 +17,9 @@ const EMPTY: MedicationFormValues = {
 export default async function NewMedicationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ medication_id?: string }>;
+  searchParams: Promise<{ medication_id?: string; selected_brand?: string }>;
 }) {
-  const { medication_id } = await searchParams;
+  const { medication_id, selected_brand } = await searchParams;
   const medId = Number(medication_id);
   if (!medication_id || !Number.isFinite(medId)) {
     // No medication chosen — send the user to pick one.
@@ -63,6 +63,7 @@ export default async function NewMedicationPage({
         medicationId={med.id}
         medicationName={med.medication_name}
         brands={med.brands}
+        selectedBrand={selected_brand}
         initial={EMPTY}
         logbookAccepted={logbookAccepted}
       />

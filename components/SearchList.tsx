@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { MedicationListItem } from "@/lib/types";
-import { SearchIcon, ChevronRightIcon } from "@/components/icons";
+import { SearchIcon, ChevronRightIcon, BookOpenIcon } from "@/components/icons";
 import {
   parseBrands,
   reorderBrandsBySearch,
@@ -138,9 +138,10 @@ export function SearchList({ rows }: { rows: MedicationListItem[] }) {
                     </div>
                     <Link
                       href={`/search/${r.id}`}
-                      className="mt-2 block text-center text-xs font-medium text-brand-600 hover:text-brand-700"
+                      className="mt-3 flex items-center justify-center gap-2 rounded-lg border-2 border-brand-500 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
                     >
-                      View educational details →
+                      <BookOpenIcon width={18} height={18} />
+                      View Complete Educational Guide
                     </Link>
                   </div>
                 ) : null}

@@ -189,3 +189,12 @@ export function CheckIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function BookOpenIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M12 6v15" />
+      <path d="M6 4.5c2 0 4.5 1 6 2.5 1.5-1.5 4-2.5 6-2.5V18c-2 0-4.5 1-6 2.5-1.5-1.5-4-2.5-6-2.5Z" />
+    </svg>
+  );
+}

@@ -8,6 +8,10 @@ import {
   PlusIcon,
   PillIcon,
 } from "@/components/icons";
+import {
+  parseBrands,
+  formatBrandPreviewWithSelected,
+} from "@/lib/medicationHelpers";
 
 export const dynamic = "force-dynamic";
 
@@ -66,8 +70,12 @@ export default async function MyMedsPage() {
                       {name}
                     </span>
                     {m.total_medications?.brands ? (
-                      <span className="block text-sm text-slate-500">
-                        {m.total_medications.brands}
+                      <span className="block truncate text-sm text-slate-500">
+                        {formatBrandPreviewWithSelected(
+                          parseBrands(m.total_medications.brands),
+                          m.selected_brand,
+                          3,
+                        )}
                       </span>
                     ) : null}
                     {dose ? (
