@@ -152,3 +152,40 @@ export function SpinnerIcon(props: IconProps) {
     </svg>
   );
 }
+
+export function InfoIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 8h.01" />
+    </svg>
+  );
+}
+
+export function UsersIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M3 20a6 6 0 0 1 12 0" />
+      <path d="M16 5.5a3.5 3.5 0 0 1 0 7" />
+      <path d="M18.5 20a6 6 0 0 0-3-5.2" />
+    </svg>
+  );
+}
+
+export function CameraIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
+      <circle cx="12" cy="13" r="3.5" />
+    </svg>
+  );
+}
+
+export function CheckIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m5 12 5 5 9-10" />
+    </svg>
+  );
+}

@@ -16,5 +16,17 @@ export default async function AppLayout({
     redirect("/login");
   }
 
+  // First-time gate: send users who haven't completed onboarding to the
+  // 4-step wizard. Once `onboarded_at` is set, they proceed to the app.
+  const { data } = await supabase
+    .from("patient_details")
+    .select("onboarded_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (!data?.onboarded_at) {
+    redirect("/onboarding");
+  }
+
   return <AppChrome>{children}</AppChrome>;
 }
