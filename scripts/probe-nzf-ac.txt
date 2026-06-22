@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+            <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=UA-164773021-1"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'UA-164773021-1');
+        </script>
+ 
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <meta http-equiv="Cache-Control" content="no-cache, must-revalidate" />
+    <meta http-equiv="cache-control" content="max-age=1" />
+    <title>There was an error with this page - New Zealand Formulary</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <link rel="stylesheet" href="/css/themes/base/jquery-ui.css?v=VajriFMUerXMfjk80UIuvj2tkgvFFoFvrhYaRoxbEjU" />
+    <link rel="stylesheet" href="/css/formulary.min.css?v=ybBX3Y2epyDfUCsFZNbUfPcR1uphey0d011MR9R5UR4" />
+    <link rel="shortcut icon" href="/site-specific/nzf/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/site-specific/nzf/favicon.png" />
+    <link href="/site-specific/nzf/custom.css" rel="stylesheet" type="text/css" />
+
+</head>
+<body>
+    <div style="text-align: center;">
+        <div class="fullpage-panel">
+            <h1 align="center" style="margin-bottom: 30px;">There was an error with this page</h1>
+            
+
+    <p>Unfortunately, the page you've requested cannot be displayed. </p>
+    <p>We apologise for the inconvenience and ask you to go back to the formulary by clicking <a href="/nzf_1">here</a>; or to report the issue to us via this <a href="/Feedback">form</a>.</p>
+
+        </div>
+    </div>
+</body>
+</html>
