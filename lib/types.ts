@@ -58,6 +58,7 @@ export interface PatientMedication {
   start_date: string | null; // ISO date
   end_date: string | null; // ISO date
   instructions: string | null;
+  selected_brand: string | null;
   created_at: string;
 }
 

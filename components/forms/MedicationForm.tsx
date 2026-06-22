@@ -19,6 +19,7 @@ interface Props {
   medicationId: number;
   medicationName: string;
   brands?: string | null;
+  selectedBrand?: string | null;
   recordId?: number;
   initial: MedicationFormValues;
   logbookAccepted: boolean;
@@ -152,6 +153,7 @@ export function MedicationForm({
   medicationId,
   medicationName,
   brands,
+  selectedBrand,
   recordId,
   initial,
   logbookAccepted,
@@ -214,6 +216,7 @@ export function MedicationForm({
       instructions: instructions.trim() || null,
       start_date: startDate || null,
       end_date: endDate || null,
+      selected_brand: selectedBrand || null,
     };
 
     const { error } =
