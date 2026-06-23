@@ -10,8 +10,14 @@ import {
   formatBrandPreview,
 } from "@/lib/medicationHelpers";
 
-export function SearchList({ rows }: { rows: MedicationListItem[] }) {
-  const [query, setQuery] = useState("");
+export function SearchList({
+  rows,
+  initialQuery = "",
+}: {
+  rows: MedicationListItem[];
+  initialQuery?: string;
+}) {
+  const [query, setQuery] = useState(initialQuery);
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   const filtered = useMemo(() => {
