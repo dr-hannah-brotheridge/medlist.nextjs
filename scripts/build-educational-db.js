@@ -65,11 +65,9 @@ const SELECT_COLUMNS = ["id", "medication_name", ...EDUCATIONAL_FIELDS, "raw_scr
 // Hard length guardrail — enforces the "few sentences" brevity constraint even
 // if the model occasionally over-generates.
 const MAX_FIELD_CHARS = 600;
-// GLM-5.2 is a reasoning/thinking model — it emits a `reasoning` trace that
-// consumes the token budget before producing `content`. A 1200-token cap
-// caused `content:null` + `finish_reason:"length"`. 4096 gives the JSON
-// output room. Overridable via env for experimentation.
-const MAX_TOKENS = Number(process.env.NEURALWATT_MAX_TOKENS) || 4096;
+// GLM-5.2 is a reasoning/thinking model — 8192 tokens gives the JSON output
+// ample room before hitting the cap. Overridable via env for experimentation.
+const MAX_TOKENS = Number(process.env.NEURALWATT_MAX_TOKENS) || 8192;
 const PAGE_SIZE = 1000;
 const DEFAULT_CONCURRENCY = 10;
 const MAX_RETRIES = 2;
@@ -138,10 +136,29 @@ const SYSTEM_PROMPT = [
 ].join("\n");
 
 // ---------------------------------------------------------------------------
+// Specialized system prompt for items NOT in the NZF (devices, condoms,
+// amino acid formulas, supplements, etc.). Prevents hallucination by
+// constraining GLM to a safe device/consumable classification + disclaimer.
+// ---------------------------------------------------------------------------
+const NOT_IN_NZF_MARKER = "NOT_IN_NZF";
+
+const DEVICE_SYSTEM_PROMPT = [
+  "You are a Medical Translation Interface for a patient-facing mobile PWA.",
+  "The item provided does NOT have a clinical monograph in the New Zealand Formulary (NZF).",
+  "It is likely a medical device, consumable, supplement, or specialist formulation.",
+  "",
+  "Your task: classify this item and return a simplified but safe JSON object.",
+  "",
+  "Rules:",
+  "1. Set `drug_class` to \"Medical Supply / Device\" if the item is a physical product (e.g. needle, condom, dressing, catheter) OR \"Specialist Formulation\" if it is a nutritional/supplement compound (e.g. amino acids, vitamins, electrolyte solutions).",
+  "2. For `why_it_is_prescribed`, briefly state the item's purpose if known (1-2 sentences max), otherwise use the standard disclaimer below.",
+  "3. For ALL remaining fields, use this exact value: \"This item does not have standard NZF clinical drug entries. Please follow specific package instructions or consult your healthcare provider.\"",
+  "4. Return ONLY a raw JSON object with these exact 9 keys (and no others):",
+  JSON.stringify(EDUCATIONAL_FIELDS, null, 2),
+].join("\n");
+
+// ---------------------------------------------------------------------------
 // NZF local source file handling (task §3).
-// Wired to load an optional NZF dump (CSV/JSON) keyed by medication name. When
-// present, the raw clinical row text is fed into the LLM user prompt; when no
-// file is found, the system prompt's fallback (GLM-as-NZF-baseline) is used.
 // ---------------------------------------------------------------------------
 const NZF_CANDIDATES = [
   "nzf-source.json",
@@ -248,20 +265,47 @@ function rowNeedsEnrichment(row) {
   return EDUCATIONAL_FIELDS.some((f) => isBlank(row[f]));
 }
 
-/** Strip accidental ```json fences / surrounding prose and parse. */
+/** Strip accidental ```json fences / surrounding prose and parse.
+ *  Includes a repair fallback that closes unterminated strings / braces when
+ *  GLM truncates its response at the token cap. */
 function parseJsonResponse(text) {
   if (!text) throw new Error("empty response");
   let s = String(text).trim();
-  // Strip Markdown code fences if the model disobeyed constraint #2.
   const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
   if (fence) s = fence[1].trim();
-  // Fallback: isolate the outermost { ... } block.
   if (s.charAt(0) !== "{") {
     const start = s.indexOf("{");
     const end = s.lastIndexOf("}");
     if (start !== -1 && end !== -1 && end > start) s = s.slice(start, end + 1);
   }
-  return JSON.parse(s);
+  try {
+    return JSON.parse(s);
+  } catch (e) {
+    const repaired = repairTruncatedJson(s);
+    if (repaired) {
+      console.warn(`  [json-repair] salvaged truncated JSON (${s.length} -> ${repaired.length} chars)`);
+      return JSON.parse(repaired);
+    }
+    throw e;
+  }
+}
+
+function repairTruncatedJson(s) {
+  if (!s || s.charAt(0) !== "{") return null;
+  let inStr = false, escape = false, depth = 0;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (escape) { escape = false; continue; }
+    if (ch === "\\") { escape = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; }
+    if (inStr) continue;
+    if (ch === "{" || ch === "[") depth++;
+    if (ch === "}" || ch === "]") depth--;
+  }
+  let repaired = s.replace(/,\s*$/, "");
+  if (inStr) repaired += '"';
+  for (let i = 0; i < depth; i++) repaired += "}";
+  return depth > 0 ? repaired : null;
 }
 
 /** Validate + sanitize the 9 keys; coerce to non-empty trimmed strings,
@@ -270,7 +314,7 @@ function sanitizePayload(obj) {
   const out = {};
   for (const f of EDUCATIONAL_FIELDS) {
     let v = obj[f];
-    if (v == null) continue; // model omitted — leave DB column untouched.
+    if (v == null) continue;
     if (typeof v !== "string") v = JSON.stringify(v);
     v = v.replace(/\s+/g, " ").trim();
     if (!v) continue;
@@ -284,11 +328,16 @@ async function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-/** Call GLM-5.2 with a short retry on transient network/rate errors. */
+/** Call GLM-5.2 with a short retry on transient network/rate errors.
+ *  Routes to DEVICE_SYSTEM_PROMPT when nzfSourceText === NOT_IN_NZF_MARKER. */
 async function callGlm(medicationName, nzfSourceText, attempt = 0) {
-  const userContent = nzfSourceText
-    ? `Medication: ${medicationName}\n\nAuthoritative NZF source text for this medication (use ONLY this, do not extrapolate beyond it, but still obey every length/tone/JSON constraint):\n"""\n${nzfSourceText}\n"""`
-    : `Medication: ${medicationName}`;
+  const isDevice = nzfSourceText === NOT_IN_NZF_MARKER;
+  const activePrompt = isDevice ? DEVICE_SYSTEM_PROMPT : SYSTEM_PROMPT;
+  const userContent = isDevice
+    ? `Item: ${medicationName}\n\nThis item was not found in the NZF. Classify it as a device or specialist formulation and return the simplified JSON.`
+    : nzfSourceText
+      ? `Medication: ${medicationName}\n\nAuthoritative NZF source text for this medication (use ONLY this, do not extrapolate beyond it, but still obey every length/tone/JSON constraint):\n"""\n${nzfSourceText}\n"""`
+      : `Medication: ${medicationName}`;
 
   try {
     const completion = await neuralwatt.chat.completions.create({
@@ -296,18 +345,12 @@ async function callGlm(medicationName, nzfSourceText, attempt = 0) {
       max_tokens: MAX_TOKENS,
       temperature: 0.2,
       response_format: { type: "json_object" },
-      // Zhipu GLM convention: disable the thinking/reasoning trace so the
-      // token budget goes straight into the JSON `content`. Best-effort: if
-      // the NeuralWatt server rejects the field, it's simply ignored.
       chat_template_kwargs: { thinking: false },
-      system: SYSTEM_PROMPT,
+      system: activePrompt,
       messages: [{ role: "user", content: userContent }],
     });
 
     const msg = completion.choices?.[0]?.message ?? {};
-    // GLM-5.2 may return the answer in `reasoning` when `content` is null
-    // (thinking not disabled). Prefer `content`; fall back to `reasoning`
-    // so we still get a payload instead of an empty failure.
     const content = typeof msg.content === "string" ? msg.content : "";
     const reasoning = typeof msg.reasoning === "string" ? msg.reasoning : "";
     const out = content.trim()
@@ -344,8 +387,8 @@ async function enrichMedication(row, stats) {
     return;
   }
   try {
-    // Prefer previously-scraped text cached in the DB; else live-scrape (unless --no-scrape).
-    // Also consult the local NZF source file as a secondary fallback.
+    // Prefer previously-scraped text cached in the DB; else live-scrape.
+    // If scraper returns null (not in NZF), cache NOT_IN_NZF marker + route to device prompt.
     let nzfText = null;
     if (row.raw_scraped_context && String(row.raw_scraped_context).trim()) {
       nzfText = String(row.raw_scraped_context).trim();
@@ -354,12 +397,16 @@ async function enrichMedication(row, stats) {
       if (scraped) {
         nzfText = scraped;
         stats.scraped++;
-        // Persist scraped text so re-runs don't re-scrape (unless dry-run).
         if (!DRY_RUN) {
           await persistScrapedContext(row.id, scraped);
         }
       } else {
+        // No NZF monograph found — cache the NOT_IN_NZF marker so we don't re-scrape.
+        nzfText = NOT_IN_NZF_MARKER;
         stats.scrapeMissed++;
+        if (!DRY_RUN) {
+          await persistScrapedContext(row.id, NOT_IN_NZF_MARKER);
+        }
       }
     }
     if (!nzfText && NZF_MAP) {
@@ -431,7 +478,6 @@ async function fetchRowsNeedingEnrichment() {
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw new Error("supabase select: " + error.message);
     if (!data || data.length === 0) break;
-    // Defensive JS-side filter (also catches empty-string "blanks").
     for (const r of data) if (rowNeedsEnrichment(r)) rows.push(r);
     if (data.length < PAGE_SIZE) break;
     from += PAGE_SIZE;
@@ -515,7 +561,7 @@ async function main() {
   console.log("Succeeded : " + stats.succeeded + (DRY_RUN ? " (dry-run, no writes)" : ""));
   console.log("Empty JSON: " + stats.empty);
   console.log("Failed    : " + stats.failed);
-  console.log("Scraped   : " + stats.scraped + " new (" + stats.scrapeMissed + " missed)");
+  console.log("Scraped   : " + stats.scraped + " new (" + stats.scrapeMissed + " missed → device prompt)");
   console.log("GLM calls : " + stats.calls);
   console.log("Tokens    : " + stats.promptTokens + " prompt / " + stats.completionTokens + " completion");
   console.log("Elapsed   : " + secs + "s");
