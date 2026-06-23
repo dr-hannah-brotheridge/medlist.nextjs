@@ -80,21 +80,6 @@ export default async function HomePage() {
         </p>
       </div>
 
-      {cabinetEmpty ? (
-        <Link
-          href="/search"
-          className="mb-4 block rounded-xl border border-brand-200 bg-brand-50 p-4 shadow-sm transition hover:border-brand-300 hover:shadow-md"
-        >
-          <p className="text-sm font-semibold text-brand-800">
-            Your medicine cabinet is empty!
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-brand-700">
-            Tap here to search and add your first medication, where you can then
-            save details and upload your pill photos.
-          </p>
-        </Link>
-      ) : null}
-
       <div className="space-y-3">
         {CARDS.map(({ href, title, desc, Icon, tint }) =>
           href === "/my-meds" && cabinetEmpty ? (

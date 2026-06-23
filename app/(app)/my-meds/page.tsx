@@ -100,13 +100,15 @@ export default async function MyMedsPage() {
         </ul>
       )}
 
-      <Link
-        href="/search"
-        className="fixed bottom-24 right-1/2 z-30 flex translate-x-1/2 items-center gap-2 rounded-full bg-brand-600 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-brand-700 sm:right-[calc(50%-13rem)] sm:translate-x-0"
-      >
-        <PlusIcon width={20} height={20} />
-        Add more
-      </Link>
+      {meds.length > 0 ? (
+        <Link
+          href="/search"
+          className="fixed bottom-24 right-1/2 z-30 flex min-h-[52px] translate-x-1/2 items-center gap-2 rounded-full bg-brand-600 px-5 py-3 font-semibold text-white shadow-lg transition hover:bg-brand-700 sm:right-[calc(50%-13rem)] sm:translate-x-0"
+        >
+          <PlusIcon width={20} height={20} />
+          Add more
+        </Link>
+      ) : null}
     </div>
   );
 }
