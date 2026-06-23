@@ -117,22 +117,38 @@ const NEURALWATT_API_KEY = process.env.NEURALWATT_API_KEY || "";
 const NEURALWATT_MODEL = process.env.NEURALWATT_MODEL || "GLM-5.2";
 
 // ---------------------------------------------------------------------------
-// Rigid system prompt (embedded verbatim per task §4, + schema keys).
-// Exact 3-constraint block is kept intact; the schema list is appended so the
-// model returns the precise DB column keys.
+// Clinical system prompt for callGlm — explicit 9-key NZF translation table.
+// The numbered mapping ties each DB column to a concrete section of the raw
+// NZF source text so GLM-5.2 cannot anchor only on `drug_class` and leave the
+// other 8 keys blank (schema choice paralysis). Key #4 uses the live DB column
+// name `what_organ_or_condition_it_protects` (NOT `_targets`, which PostgREST
+// would silently ignore — see file header note). Key #5 is
+// `what_happens_if_you_stop_it` (matches EDUCATIONAL_FIELDS exactly).
 // ---------------------------------------------------------------------------
 const SYSTEM_PROMPT = [
-  "You are a highly precise Medical Translation Interface operating strictly within the guidelines of the New Zealand Formulary (NZF). Your task is to provide translation content for a mobile PWA patient application.",
+  "You are a strict data mapper. Translate the provided raw NZF source text into the required 9-key JSON structure by following this exact mapping guide:",
   "",
-  "You must strictly adhere to the following execution constraints:",
-  "1. BREVITY CONSTRAINT: For each individual column key, the output material MUST NOT extend beyond a few sentences (maximum 2-3 brief sentences). It must be punchy, highly scannable, brief, and coherent. No lengthy blocks of text are permitted.",
-  "2. FORMATTING: You must return your response as a raw, valid JSON object matching the 9 target column keys exactly as provided. Do not wrap the JSON in Markdown code blocks (such as ```json) or add introductory/concluding conversational text.",
-  "3. TONE: Write at a clear 6th-grade reading level. Eliminate dense medical jargon (e.g., instead of \"dyspnea\", write \"shortness of breath\").",
+  "1. `drug_class`: Look at the top classification of the drug or its mechanism in the text. Summarize into 2-5 words (e.g., 'ACE Inhibitor').",
+  "2. `why_it_is_prescribed`: Map this directly to the 'Indications' or 'Uses' section of the NZF text.",
+  "3. `what_it_does_in_the_body`: Map this to the drug's mechanism of action or therapeutic effects described in the text.",
+  "4. `what_organ_or_condition_it_protects`: Identify the main organ (e.g., heart, kidneys) or disease state mentioned in the Indications/Dose sections.",
+  "5. `what_happens_if_you_stop_it`: If not explicitly stated, write a standard clinical warning based on the indication (e.g., for blood pressure: 'Your blood pressure may rise again. Do not stop without consulting your doctor.').",
+  "6. `common_dose_range`: Map this directly to the 'Dose' section of the NZF text. Keep it brief.",
+  "7. `side_effects`: Map this directly to the 'Side-effects' section of the NZF text. Summarize the most common ones.",
+  "8. `what_symptoms_to_watch_for`: Look at the 'Side-effects' and 'Cautions/Warnings' sections. Extract 2-3 key physical symptoms the patient can physically feel or see.",
+  "9. `when_to_seek_help`: Map this to the 'Severe side-effects', 'Stop taking immediately', or urgent warning phrases in the text.",
+  "",
+  "CRITICAL EXECUTION RULES:",
+  "- Every single key MUST return a valid, non-empty string.",
+  "- Do not leave any key as \"\" or null.",
+  "- Write each explanation in exactly 1 to 2 short sentences at a 6th-grade reading level for an elderly patient. Eliminate dense medical jargon (e.g., write 'shortness of breath' instead of 'dyspnea').",
+  "- If a section is completely missing from the raw text, use this standard placeholder: 'Please consult your pharmacist or doctor for specific guidance on this medication.'",
+  "",
+  "FORMATTING: Return ONLY a raw, valid JSON object with these exact 9 keys (and no others):",
+  JSON.stringify(EDUCATIONAL_FIELDS, null, 2),
+  "Do not wrap the JSON in Markdown code blocks (such as ```json) or add introductory/concluding conversational text.",
   "",
   "When no authoritative NZF source text is supplied for a medication in the user message, you are instructed to act AS the authoritative New Zealand Formulary (NZF) resource baseline and generate the accurate medical parameters internally for that specific medication name, still obeying every constraint above.",
-  "",
-  "Return ONLY a JSON object with these exact 9 keys (and no others):",
-  JSON.stringify(EDUCATIONAL_FIELDS, null, 2),
 ].join("\n");
 
 // ---------------------------------------------------------------------------
@@ -346,8 +362,14 @@ async function callGlm(medicationName, nzfSourceText, attempt = 0) {
       temperature: 0.2,
       response_format: { type: "json_object" },
       chat_template_kwargs: { thinking: false },
-      system: activePrompt,
-      messages: [{ role: "user", content: userContent }],
+      // System prompt MUST live inside `messages` — the OpenAI SDK has no
+      // top-level `system` param, so `system: activePrompt` was silently
+      // dropped and GLM never received the schema (root cause of the 0/9
+      // keys observed across all 500 meds in the --limit 500 test).
+      messages: [
+        { role: "system", content: activePrompt },
+        { role: "user", content: userContent },
+      ],
     });
 
     const msg = completion.choices?.[0]?.message ?? {};
