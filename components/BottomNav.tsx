@@ -29,14 +29,15 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              aria-current={active ? "page" : undefined}
               className={
-                "flex flex-1 flex-col items-center gap-1 py-2.5 text-xs font-medium transition " +
+                "flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-3 text-xs font-semibold transition " +
                 (active
                   ? "text-brand-600"
-                  : "text-slate-400 hover:text-slate-600")
+                  : "text-slate-600 hover:text-slate-900")
               }
             >
-              <Icon width={22} height={22} />
+              <Icon width={24} height={24} />
               <span>{label}</span>
             </Link>
           );

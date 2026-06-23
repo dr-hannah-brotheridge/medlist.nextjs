@@ -26,6 +26,14 @@ body {
   height: 100%;
 }
 
+/* Dynamic text sizing hook (A / A+ / A++). Scales all rem-based utilities. */
+html[data-fontsize="lg"] {
+  font-size: 1.125rem; /* 18px */
+}
+html[data-fontsize="xl"] {
+  font-size: 1.25rem; /* 20px */
+}
+
 body {
   background-color: var(--color-surface);
   color: #0f172a;

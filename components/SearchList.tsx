@@ -37,7 +37,7 @@ export function SearchList({
           <SearchIcon
             width={20}
             height={20}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"
           />
           <input
             type="search"
@@ -49,17 +49,17 @@ export function SearchList({
               setQuery(e.target.value);
               setExpandedId(null);
             }}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pl-10 pr-3 text-slate-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-200"
+            className="min-h-[48px] w-full rounded-lg border border-slate-300 bg-white py-3 pl-10 pr-3 text-slate-900 outline-none transition focus:border-brand-400 focus:ring-2 focus:ring-brand-200"
           />
         </div>
       </div>
 
-      <p className="mb-2 px-1 text-xs text-slate-400">
+      <p className="mb-2 px-1 text-sm font-medium text-slate-600">
         {filtered.length} of {rows.length} medications
       </p>
 
       {filtered.length === 0 ? (
-        <p className="rounded-xl border border-slate-200 bg-card p-6 text-center text-sm text-slate-500">
+        <p className="rounded-xl border border-slate-200 bg-card p-6 text-center text-sm font-medium text-slate-600">
           No medications match &ldquo;{query}&rdquo;.
         </p>
       ) : (
@@ -86,31 +86,31 @@ export function SearchList({
                       ? setExpandedId(isExpanded ? null : r.id)
                       : undefined
                   }
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition hover:bg-brand-50"
+                  className="flex min-h-[56px] w-full items-center gap-3 px-4 py-4 text-left transition hover:bg-brand-50"
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium text-slate-900">
+                    <span className="block truncate font-semibold text-slate-900">
                       {r.medication_name || "Unnamed medication"}
                     </span>
                     {preview ? (
-                      <span className="block truncate text-sm text-slate-500">
+                      <span className="block truncate text-sm text-slate-600">
                         <BrandHighlight text={preview} searchTerm={query} />
                       </span>
                     ) : null}
                   </span>
                   {hasBrands ? (
                     <ChevronRightIcon
-                      width={18}
-                      height={18}
+                      width={20}
+                      height={20}
                       className={
-                        "shrink-0 text-slate-300 transition-transform " +
+                        "shrink-0 text-slate-500 transition-transform " +
                         (isExpanded ? "rotate-90" : "")
                       }
                     />
                   ) : (
                     <Link
                       href={`/search/${r.id}`}
-                      className="shrink-0 text-xs font-medium text-brand-600 hover:text-brand-700"
+                      className="flex min-h-[48px] shrink-0 items-center rounded-lg px-3 py-2 text-sm font-semibold text-brand-600 hover:bg-brand-50 hover:text-brand-700"
                       onClick={(e) => e.stopPropagation()}
                     >
                       Details
@@ -120,31 +120,31 @@ export function SearchList({
 
                 {isExpanded && hasBrands ? (
                   <div className="border-t border-slate-100 bg-slate-50 px-4 py-2">
-                    <p className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">
                       {matchingBrands.length} brand
                       {matchingBrands.length !== 1 ? "s" : ""} — tap to select
                     </p>
-                    <div className="flex flex-col gap-1">
+                    <div className="flex flex-col gap-1.5">
                       {matchingBrands.map((brand) => (
                         <Link
                           key={brand}
                           href={`/my-meds/new?medication_id=${r.id}&selected_brand=${encodeURIComponent(brand)}`}
-                          className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 transition hover:border-brand-300 hover:bg-brand-50"
+                          className="flex min-h-[48px] items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-800 transition hover:border-brand-300 hover:bg-brand-50"
                         >
                           <span>
                             <BrandHighlight text={brand} searchTerm={query} />
                           </span>
                           <ChevronRightIcon
-                            width={14}
-                            height={14}
-                            className="shrink-0 text-slate-300"
+                            width={16}
+                            height={16}
+                            className="shrink-0 text-slate-500"
                           />
                         </Link>
                       ))}
                     </div>
                     <Link
                       href={`/search/${r.id}`}
-                      className="mt-3 flex items-center justify-center gap-2 rounded-lg border-2 border-brand-500 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
+                      className="mt-3 flex min-h-[52px] items-center justify-center gap-2 rounded-lg border-2 border-brand-500 bg-brand-50 px-4 py-3 text-sm font-semibold text-brand-700 transition hover:bg-brand-100"
                     >
                       <BookOpenIcon width={18} height={18} />
                       View Complete Educational Guide
@@ -181,7 +181,7 @@ function BrandHighlight({
       parts.push(text.slice(lastIndex, idx));
     }
     parts.push(
-      <strong key={idx} className="font-semibold text-brand-700">
+      <strong key={idx} className="font-bold text-brand-700">
         {text.slice(idx, idx + ql.length)}
       </strong>,
     );

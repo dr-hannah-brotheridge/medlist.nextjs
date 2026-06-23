@@ -11,11 +11,13 @@ import {
   labelClass,
   primaryButtonClass,
 } from "@/components/AuthShell";
+import { VisibilityIcon, VisibilityOffIcon } from "@/components/icons";
 
 export default function SignupPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -77,16 +79,32 @@ export default function SignupPage() {
           <label className={labelClass} htmlFor="password">
             Password
           </label>
-          <input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={fieldClass}
-          />
-          <p className="mt-1 text-xs text-slate-400">At least 6 characters.</p>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={fieldClass + " pr-12"}
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute right-1 top-1/2 flex min-h-[44px] min-w-[44px] -translate-y-1/2 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+            >
+              {showPassword ? (
+                <VisibilityOffIcon width={20} height={20} />
+              ) : (
+                <VisibilityIcon width={20} height={20} />
+              )}
+            </button>
+          </div>
+          <p className="mt-1 text-xs font-medium text-slate-600">
+            At least 6 characters — keep it simple and memorable.
+          </p>
         </div>
         {error ? (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">

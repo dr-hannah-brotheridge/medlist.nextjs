@@ -61,7 +61,7 @@ export function HamburgerDrawer() {
         type="button"
         aria-label="Open menu"
         onClick={() => setOpen(true)}
-        className="rounded-lg p-2 text-slate-700 transition hover:bg-slate-100"
+        className="min-h-[48px] min-w-[48px] rounded-lg p-3 text-slate-800 transition hover:bg-slate-100"
       >
         <MenuIcon />
       </button>
@@ -80,27 +80,27 @@ export function HamburgerDrawer() {
               <button
                 aria-label="Close menu"
                 onClick={() => setOpen(false)}
-                className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"
+                className="min-h-[48px] min-w-[48px] rounded-lg p-2 text-slate-700 hover:bg-slate-100"
               >
                 <CloseIcon />
               </button>
             </div>
-            <nav className="p-2">
+            <nav className="space-y-1 p-2">
               {LINKS.map(({ href, label, Icon }) => (
                 <Link
                   key={href}
                   href={href}
-                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-slate-700 transition hover:bg-brand-50 hover:text-brand-700"
+                  className="flex min-h-[52px] items-center gap-3 rounded-lg px-4 py-3.5 font-medium text-slate-800 transition hover:bg-brand-50 hover:text-brand-700"
                 >
-                  <Icon width={20} height={20} />
-                  <span className="font-medium">{label}</span>
+                  <Icon width={22} height={22} />
+                  <span>{label}</span>
                 </Link>
               ))}
             </nav>
             <div className="mt-auto border-t border-slate-200 p-3">
               <button
                 onClick={signOut}
-                className="w-full rounded-lg border border-red-200 px-4 py-2.5 font-semibold text-red-600 transition hover:bg-red-50"
+                className="min-h-[52px] w-full rounded-lg border border-red-200 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-50"
               >
                 Log Out
               </button>

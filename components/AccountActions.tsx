@@ -61,7 +61,7 @@ export function AccountActions({ email }: { email: string }) {
         <button
           onClick={logOut}
           disabled={busy !== null}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
+          className="flex min-h-[52px] w-full items-center justify-center gap-2 rounded-lg border border-red-200 px-4 py-3 font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
         >
           {busy === "logout" ? <SpinnerIcon width={18} height={18} /> : null}
           Log Out
@@ -69,7 +69,7 @@ export function AccountActions({ email }: { email: string }) {
 
         <Link
           href="/legal"
-          className="mt-3 block rounded-lg bg-slate-700 px-4 py-2.5 text-center font-medium text-white transition hover:bg-slate-800"
+          className="mt-3 flex min-h-[52px] items-center justify-center rounded-lg bg-slate-700 px-4 py-3 text-center font-semibold text-white transition hover:bg-slate-800"
         >
           Legal Information
         </Link>
@@ -79,14 +79,14 @@ export function AccountActions({ email }: { email: string }) {
         <button
           onClick={sendReset}
           disabled={busy !== null}
-          className="rounded-lg bg-brand-600 px-4 py-2.5 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
+          className="min-h-[52px] rounded-lg bg-brand-600 px-5 py-3 font-semibold text-white transition hover:bg-brand-700 disabled:opacity-60"
         >
           {busy === "reset" ? "Sending…" : "Reset Password"}
         </button>
         <button
           onClick={deleteAccount}
           disabled={busy !== null}
-          className="rounded-lg bg-red-500 px-4 py-2.5 font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
+          className="min-h-[52px] rounded-lg bg-red-500 px-5 py-3 font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
         >
           {busy === "delete" ? "Deleting…" : "Delete Account"}
         </button>

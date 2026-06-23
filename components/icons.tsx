@@ -5,7 +5,7 @@ type IconProps = SVGProps<SVGSVGElement>;
 const base = {
   fill: "none",
   stroke: "currentColor",
-  strokeWidth: 1.8,
+  strokeWidth: 2,
   strokeLinecap: "round" as const,
   strokeLinejoin: "round" as const,
   viewBox: "0 0 24 24",
@@ -195,6 +195,35 @@ export function BookOpenIcon(props: IconProps) {
     <svg {...base} {...props}>
       <path d="M12 6v15" />
       <path d="M6 4.5c2 0 4.5 1 6 2.5 1.5-1.5 4-2.5 6-2.5V18c-2 0-4.5 1-6 2.5-1.5-1.5-4-2.5-6-2.5Z" />
+    </svg>
+  );
+}
+
+export function VisibilityIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function VisibilityOffIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M3 3l18 18" />
+      <path d="M10.6 10.6a3 3 0 0 0 4.2 4.2" />
+      <path d="M9.9 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.8 17.8 0 0 1-3.2 4.3" />
+      <path d="M6.1 6.1A17.8 17.8 0 0 0 2 12s3.5 7 10 7a10.4 10.4 0 0 0 4.9-1.1" />
+    </svg>
+  );
+}
+
+export function MailIcon(props: IconProps) {
+  return (
+    <svg {...base} {...props}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
     </svg>
   );
 }
