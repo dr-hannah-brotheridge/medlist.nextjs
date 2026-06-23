@@ -18,7 +18,7 @@
  * parse/validation failure never aborts the run.
  *
  * Usage:
- *   node scripts/build-educational-db.js [--dry-run] [--limit N] [--concurrency K] [--no-scrape] [--no-db-cap]
+ *   node scripts/build-educational-db.js [--dry-run] [--limit N] [--concurrency K] [--no-scrape] [--no-db-cap] [--re-scrape]
  *
  * Env (read from .env.local / .env if present, else process.env):
  *   NEXT_PUBLIC_SUPABASE_URL
@@ -95,6 +95,11 @@ const MAX_FIELD_CHARS_CLI = (() => {
 // When true, skip the DB_VARCHAR_CAP (use after applying migration
 // 20260623_000002 to widen the columns to TEXT).
 const NO_DB_CAP = args.includes("--no-db-cap");
+// When true, re-scrape rows previously cached as NOT_IN_NZF (the old exact-
+// match scraper missed real drugs like Enalapril/Diltiazem). This flag targets
+// those rows, clears the cached marker, and re-scrapes with the fixed fuzzy
+// matcher. Rows that still return null are re-marked NOT_IN_NZF.
+const RE_SCRAPE = args.includes("--re-scrape");
 
 // ---------------------------------------------------------------------------
 // Tiny dotenv loader (mirrors import-nzulm.js — zero dependencies).
@@ -426,12 +431,23 @@ async function enrichMedication(row, stats) {
   try {
     // Prefer previously-scraped text cached in the DB; else live-scrape.
     // If scraper returns null (not in NZF), cache NOT_IN_NZF marker + route to device prompt.
+    // --re-scrape overrides the cache: if the cached value is NOT_IN_NZF,
+    // clear it and re-scrape with the fixed fuzzy matcher.
     let nzfText = null;
-    if (row.raw_scraped_context && String(row.raw_scraped_context).trim()) {
-      nzfText = String(row.raw_scraped_context).trim();
+    const cached = row.raw_scraped_context ? String(row.raw_scraped_context).trim() : "";
+    if (cached && cached !== NOT_IN_NZF_MARKER) {
+      nzfText = cached;
+    } else if (cached === NOT_IN_NZF_MARKER && !RE_SCRAPE) {
+      // Use the cached NOT_IN_NZF marker (skip re-scraping).
+      nzfText = NOT_IN_NZF_MARKER;
     } else if (!NO_SCRAPE) {
+      // Either no cache, or --re-scrape is clearing a NOT_IN_NZF marker.
       const scraped = await scrapeNzfForMedication(name);
       if (scraped) {
+        // Re-scrape found a monograph! This was a false negative from the old scraper.
+        if (RE_SCRAPE && cached === NOT_IN_NZF_MARKER) {
+          stats.reScrapeFound++;
+        }
         nzfText = scraped;
         stats.scraped++;
         if (!DRY_RUN) {
@@ -501,10 +517,37 @@ async function persistScrapedContext(id, text) {
 
 // ---------------------------------------------------------------------------
 // Read phase: fetch rows needing enrichment, paginated.
+//   - Default: rows with at least one blank educational field.
+//   - --re-scrape: rows where raw_scraped_context = NOT_IN_NZF (re-scrape them
+//     with the fixed fuzzy matcher). Also clears those educational fields so
+//     they get re-enriched with real clinical content.
 // ---------------------------------------------------------------------------
 async function fetchRowsNeedingEnrichment() {
   const rows = [];
   let from = 0;
+
+  if (RE_SCRAPE) {
+    // Target rows previously cached as NOT_IN_NZF — these may be real drugs
+    // that the old exact-match scraper missed (e.g. Enalapril, Diltiazem).
+    console.log("[read] --re-scrape: targeting rows cached as NOT_IN_NZF…");
+    const eqFilter = `raw_scraped_context.eq.${NOT_IN_NZF_MARKER}`;
+    while (true) {
+      const { data, error } = await supabase
+        .from("total_medications")
+        .select(SELECT_COLUMNS)
+        .eq("raw_scraped_context", NOT_IN_NZF_MARKER)
+        .order("medication_name", { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
+      if (error) throw new Error("supabase select: " + error.message);
+      if (!data || data.length === 0) break;
+      rows.push(...data);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    return rows;
+  }
+
+  // Default: rows with at least one blank educational field.
   const orFilter = EDUCATIONAL_FIELDS.map((f) => `${f}.is.null`).join(",");
   while (true) {
     const { data, error } = await supabase
@@ -539,6 +582,7 @@ async function main() {
   console.log("NZF source    : " + (NZF_MAP ? "local file loaded (fallback)" : "none — scraper only"));
   console.log("Mode          : " + (DRY_RUN ? "DRY RUN (no writes)" : "LIVE"));
   console.log("DB cap        : " + (NO_DB_CAP ? "DISABLED (--no-db-cap)" : `${DB_VARCHAR_CAP} chars`));
+  console.log("Re-scrape     : " + (RE_SCRAPE ? "ENABLED — re-scraping NOT_IN_NZF rows with fixed fuzzy matcher" : "no"));
   console.log("Limit         : " + (LIMIT ? String(LIMIT) : "no cap"));
   console.log("-".repeat(70));
 
@@ -572,6 +616,7 @@ async function main() {
     skippedNoKey: 0,
     scraped: 0,
     scrapeMissed: 0,
+    reScrapeFound: 0,
     calls: 0,
     promptTokens: 0,
     completionTokens: 0,
@@ -599,7 +644,12 @@ async function main() {
   console.log("Succeeded : " + stats.succeeded + (DRY_RUN ? " (dry-run, no writes)" : ""));
   console.log("Empty JSON: " + stats.empty);
   console.log("Failed    : " + stats.failed);
-  console.log("Scraped   : " + stats.scraped + " new (" + stats.scrapeMissed + " missed → device prompt)");
+  if (RE_SCRAPE) {
+    console.log("Re-scraped: " + stats.scraped + " now found (" + stats.scrapeMissed + " still missing → device prompt)");
+    console.log("Upgraded  : " + stats.reScrapeFound + " rows upgraded from device disclaimer to real clinical content");
+  } else {
+    console.log("Scraped   : " + stats.scraped + " new (" + stats.scrapeMissed + " missed → device prompt)");
+  }
   console.log("GLM calls : " + stats.calls);
   console.log("Tokens    : " + stats.promptTokens + " prompt / " + stats.completionTokens + " completion");
   console.log("Elapsed   : " + secs + "s");

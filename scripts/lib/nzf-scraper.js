@@ -75,10 +75,28 @@ async function fetchWithRetry(url, { json = false } = {}) {
   throw lastErr;
 }
 
+/** Normalize a drug name for fuzzy matching:
+ *  - lowercase, trim
+ *  - strip "(as ...)" salt/form suffixes (e.g., "Enalapril (as enalapril maleate)" -> "enalapril")
+ *  - strip "(ECP)" / "(depot)" qualifiers
+ *  - collapse whitespace */
+function normalizeName(name) {
+  return String(name || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s*\(as[^)]*\)/g, '')   // remove "(as enalapril maleate)"
+    .replace(/\s*\(ecp\)/g, '')        // remove "(ECP)"
+    .replace(/\s*\(depot\)/g, '')      // remove "(depot)"
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function findMonographUrl(resultsHtml, searchTerm) {
   const $ = cheerio.load(resultsHtml);
-  const target = searchTerm.trim().toLowerCase();
-  let monoUrl = null;
+  const target = normalizeName(searchTerm);
+  let monoUrl = null;    // exact match (priority 1)
+  let fallbackUrl = null; // fuzzy match (priority 2)
+
   $('div.search-result').each((_, el) => {
     if (monoUrl) return;
     const $el = $(el);
@@ -86,13 +104,25 @@ function findMonographUrl(resultsHtml, searchTerm) {
     if (!isMonograph) return;
     const $heading = $el.find('.search-result-heading a').first();
     const title = $heading.text().trim().toLowerCase();
-    if (title === target) {
-      let href = $heading.attr('href') || '';
-      if (!href) return;
-      monoUrl = href.startsWith('http') ? href : NZF_BASE + (href.startsWith('/') ? href : '/' + href);
+    const normTitle = normalizeName(title);
+    let href = $heading.attr('href') || '';
+    if (!href) return;
+    const fullUrl = href.startsWith('http') ? href : NZF_BASE + (href.startsWith('/') ? href : '/' + href);
+
+    // Priority 1: exact match (raw or normalized)
+    if (title === target || normTitle === target) {
+      monoUrl = fullUrl;
+      return;
+    }
+    // Priority 2: one contains the other (catches "Enalapril" vs "Enalapril (as ...)")
+    if (!fallbackUrl) {
+      if (normTitle.includes(target) || target.includes(normTitle)) {
+        fallbackUrl = fullUrl;
+      }
     }
   });
-  return monoUrl;
+
+  return monoUrl || fallbackUrl;
 }
 
 function extractMonographSections(monoHtml) {
@@ -179,6 +209,7 @@ module.exports = {
   findMonographUrl,
   extractMonographSections,
   formatSectionsAsText,
+  normalizeName,
   NZF_BASE,
 };
 
