@@ -18,7 +18,7 @@
  * parse/validation failure never aborts the run.
  *
  * Usage:
- *   node scripts/build-educational-db.js [--dry-run] [--limit N] [--concurrency K] [--no-scrape]
+ *   node scripts/build-educational-db.js [--dry-run] [--limit N] [--concurrency K] [--no-scrape] [--no-db-cap]
  *
  * Env (read from .env.local / .env if present, else process.env):
  *   NEXT_PUBLIC_SUPABASE_URL
@@ -65,6 +65,13 @@ const SELECT_COLUMNS = ["id", "medication_name", ...EDUCATIONAL_FIELDS, "raw_scr
 // Hard length guardrail — enforces the "few sentences" brevity constraint even
 // if the model occasionally over-generates.
 const MAX_FIELD_CHARS = 600;
+// Supabase schema guardrail: the live DB types these 9 columns as
+// character varying(100) (see migration 20260623_000002 for the TEXT fix).
+// Until that migration is applied, any value > 100 chars fails the whole
+// .update() with "value too long for type character varying(100)". We cap
+// defensively to 95 chars (leaving headroom for the "…" ellipsis) so writes
+// land immediately. Override with `--no-db-cap` after widening to TEXT.
+const DB_VARCHAR_CAP = 95;
 // GLM-5.2 is a reasoning/thinking model — 8192 tokens gives the JSON output
 // ample room before hitting the cap. Overridable via env for experimentation.
 const MAX_TOKENS = Number(process.env.NEURALWATT_MAX_TOKENS) || 8192;
@@ -85,6 +92,9 @@ const MAX_FIELD_CHARS_CLI = (() => {
   const i = args.indexOf("--max-chars");
   return i !== -1 ? Number(args[i + 1]) || MAX_FIELD_CHARS : MAX_FIELD_CHARS;
 })();
+// When true, skip the DB_VARCHAR_CAP (use after applying migration
+// 20260623_000002 to widen the columns to TEXT).
+const NO_DB_CAP = args.includes("--no-db-cap");
 
 // ---------------------------------------------------------------------------
 // Tiny dotenv loader (mirrors import-nzulm.js — zero dependencies).
@@ -325,7 +335,9 @@ function repairTruncatedJson(s) {
 }
 
 /** Validate + sanitize the 9 keys; coerce to non-empty trimmed strings,
- *  apply the length guardrail, and drop anything that fails. */
+ *  apply the length guardrail, and drop anything that fails.
+ *  Also applies the DB_VARCHAR_CAP (95 chars) unless --no-db-cap is set,
+ *  to satisfy the live VARCHAR(100) schema until widened to TEXT. */
 function sanitizePayload(obj) {
   const out = {};
   for (const f of EDUCATIONAL_FIELDS) {
@@ -335,6 +347,9 @@ function sanitizePayload(obj) {
     v = v.replace(/\s+/g, " ").trim();
     if (!v) continue;
     if (v.length > MAX_FIELD_CHARS_CLI) v = v.slice(0, MAX_FIELD_CHARS_CLI - 1).trim() + "…";
+    if (!NO_DB_CAP && v.length > DB_VARCHAR_CAP) {
+      v = v.slice(0, DB_VARCHAR_CAP - 1).trim() + "…";
+    }
     out[f] = v;
   }
   return out;
@@ -523,6 +538,7 @@ async function main() {
   console.log("Scraping      : " + (NO_SCRAPE ? "DISABLED (--no-scrape)" : "live nzf.org.nz scrape"));
   console.log("NZF source    : " + (NZF_MAP ? "local file loaded (fallback)" : "none — scraper only"));
   console.log("Mode          : " + (DRY_RUN ? "DRY RUN (no writes)" : "LIVE"));
+  console.log("DB cap        : " + (NO_DB_CAP ? "DISABLED (--no-db-cap)" : `${DB_VARCHAR_CAP} chars`));
   console.log("Limit         : " + (LIMIT ? String(LIMIT) : "no cap"));
   console.log("-".repeat(70));
 
