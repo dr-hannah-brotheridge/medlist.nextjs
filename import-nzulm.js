@@ -14,7 +14,9 @@
  *                     brandSide: strip parenthesised substrings, truncate before
  *                                trailing numbers/slashes, trim.
  *                     genericSide: clean with Pass-1 logic, resolve parent id.
- *                     Batch insert (500) into nzulm_lookup.
+ *                     If parent doesn't exist (e.g. "insulin lispro" has no
+ *                     generic row), AUTO-CREATE it so trade brands like Humalog
+ *                     aren't lost. Batch insert (500) into nzulm_lookup.
  *
  * Usage:
  *   node import-nzulm.js [csvPath] [--dry-run] [--truncate]
@@ -369,11 +371,19 @@ async function main() {
   }
 
   // ---- PASS 2: insert trades --------------------------------------------
+  // KEY FIX: When a trade row's generic name doesn't match an existing parent
+  // (e.g. "insulin lispro" has no generic CSV row), AUTO-CREATE the missing
+  // generic entry instead of dropping the trade. This prevents losing brands
+  // like Humalog, NovoRapid, Oxynorm, etc.
   console.log("\n[PASS 2] Cleaning + inserting trade brands...");
   const tradeRows = [];
   let unresolvableParent = 0;
+  let autoCreatedCount = 0;
   let noHyphen = 0;
+  const autoCreatedNames = new Map(); // nameLc -> placeholder; resolved after insert
 
+  // First pass: collect all trade rows + track missing generics
+  const pendingTrades = [];
   for (const t of trades) {
     const term = t.prescribing_term;
     const hyphenIdx = term.indexOf(" - ");
@@ -397,21 +407,81 @@ async function main() {
       (t.concept_id ? conceptIdToDbId.get(t.concept_id) : undefined);
 
     if (!parentId) {
-      unresolvableParent++;
-      continue;
+      // Generic doesn't exist — collect for auto-creation
+      const nameLc = genericCleaned.toLowerCase();
+      if (nameLc && !autoCreatedNames.has(nameLc) && !nameLcToDbId.has(nameLc)) {
+        autoCreatedNames.set(nameLc, genericCleaned);
+      }
+      pendingTrades.push({
+        brand,
+        genericCleaned,
+        concept_id: t.concept_id,
+        needsParent: true,
+      });
+    } else {
+      tradeRows.push({
+        generic_medication_id: parentId,
+        brand_name: brand,
+        concept_id: t.concept_id,
+      });
+    }
+  }
+
+  // Auto-create missing generic medications so trade brands aren't lost.
+  // This catches drugs like "Insulin lispro" (no generic CSV row, but Humalog
+  // references it as a trade brand).
+  if (autoCreatedNames.size > 0) {
+    console.log(
+      "  [auto-create] " + autoCreatedNames.size + " missing generic medications will be auto-created...",
+    );
+    const toInsert = [];
+    for (const [nameLc, name] of autoCreatedNames) {
+      toInsert.push({ medication_name: name });
     }
 
-    tradeRows.push({
-      generic_medication_id: parentId,
-      brand_name: brand,
-      concept_id: t.concept_id,
-    });
+    if (!DRY_RUN) {
+      for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
+        const batch = toInsert.slice(i, i + BATCH_SIZE);
+        const inserted = await restInsert("total_medications", batch, ["medication_name"]);
+        for (const r of inserted) {
+          const nl = (r.medication_name || "").toLowerCase();
+          nameLcToDbId.set(nl, r.id);
+        }
+        process.stdout.write(
+          "\r  auto-created " + Math.min(i + BATCH_SIZE, toInsert.length) + "/" + toInsert.length,
+        );
+      }
+      console.log("");
+    } else {
+      let sim = nameLcToDbId.size + 1;
+      for (const [nameLc] of autoCreatedNames) {
+        nameLcToDbId.set(nameLc, sim++);
+      }
+      console.log("  (dry-run: would auto-create " + toInsert.length + ")");
+    }
+    autoCreatedCount = autoCreatedNames.size;
+
+    // Now resolve the pending trades that needed these parents
+    for (const pt of pendingTrades) {
+      const parentId = nameLcToDbId.get(pt.genericCleaned.toLowerCase());
+      if (parentId) {
+        tradeRows.push({
+          generic_medication_id: parentId,
+          brand_name: pt.brand,
+          concept_id: pt.concept_id,
+        });
+      } else {
+        unresolvableParent++;
+      }
+    }
   }
 
   console.log(
     "  " +
       tradeRows.length +
-      " clean trade rows ready | unresolvable parent: " +
+      " clean trade rows ready | auto-created generics: " +
+      autoCreatedCount +
+      " | still unresolvable: " +
       unresolvableParent +
       " | no-hyphen rows: " +
       noHyphen,
@@ -460,7 +530,13 @@ async function main() {
   console.log("=".repeat(70));
   console.log(
     "Generics inserted : " +
-      (DRY_RUN ? "(dry-run)" : cleanedGenerics.length),
+      (DRY_RUN ? "(dry-run)" : cleanedGenerics.length + autoCreatedCount),
+  );
+  console.log(
+    "  - from CSV      : " + (DRY_RUN ? "(dry-run)" : cleanedGenerics.length),
+  );
+  console.log(
+    "  - auto-created  : " + (DRY_RUN ? "(dry-run)" : autoCreatedCount),
   );
   console.log(
     "Trades inserted   : " + (DRY_RUN ? "(dry-run)" : tradeRows.length),
