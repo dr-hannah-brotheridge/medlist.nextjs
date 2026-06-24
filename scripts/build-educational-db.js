@@ -100,6 +100,21 @@ const NO_DB_CAP = args.includes("--no-db-cap");
 // those rows, clears the cached marker, and re-scrapes with the fixed fuzzy
 // matcher. Rows that still return null are re-marked NOT_IN_NZF.
 const RE_SCRAPE = args.includes("--re-scrape");
+// When set, force re-scrape of medications whose name contains the given
+// substring (case-insensitive), ignoring cached raw_scraped_context AND the
+// default blank-field filter. Clears the 9 educational fields so they get
+// re-enriched with the new (possibly multi-monograph) context. Use to fix
+// dual-use drugs like methotrexate whose cached context was only one side.
+// Example: --re-scrape-name "methotrexate"
+const RE_SCRAPE_NAME_IDX = args.indexOf("--re-scrape-name");
+const RE_SCRAPE_NAME =
+  RE_SCRAPE_NAME_IDX !== -1 ? args[RE_SCRAPE_NAME_IDX + 1] || "" : "";
+// When true, re-scrape ALL rows that have cached raw_scraped_context (excluding
+// NOT_IN_NZF). Smartly skips the GLM re-enrichment unless the new scrape found
+// multi-monograph content (detected via "=== NZF MONOGRAPH 2/" marker) or the
+// text changed substantially — saving API tokens on the many drugs that only
+// have one monograph (whose re-scrape is byte-identical to the cache).
+const RE_SCRAPE_ALL_CACHED = args.includes("--re-scrape-all-cached");
 
 // ---------------------------------------------------------------------------
 // Tiny dotenv loader (mirrors import-nzulm.js — zero dependencies).
@@ -156,8 +171,9 @@ const SYSTEM_PROMPT = [
   "CRITICAL EXECUTION RULES:",
   "- Every single key MUST return a valid, non-empty string.",
   "- Do not leave any key as \"\" or null.",
-  "- Write each explanation in exactly 1 to 2 short sentences at a 6th-grade reading level for an elderly patient. Eliminate dense medical jargon (e.g., write 'shortness of breath' instead of 'dyspnea').",
+    "- Write each explanation in exactly 1 to 2 short sentences at a 6th-grade reading level for an elderly patient. Eliminate dense medical jargon (e.g., write 'shortness of breath' instead of 'dyspnea').",
   "- If a section is completely missing from the raw text, use this standard placeholder: 'Please consult your pharmacist or doctor for specific guidance on this medication.'",
+  "- MULTIPLE MONOGRAPHS: Some medications have 2+ NZF monographs (one per therapeutic use, marked '=== NZF MONOGRAPH 1/2 ===', '=== NZF MONOGRAPH 2/2 ===', etc.). When more than one is supplied, SYNTHESISE across ALL of them — do not anchor on only the first. For example, methotrexate is both an antineoplastic (cancer) and an autoimmune agent (rheumatoid arthritis); both uses must be reflected in `why_it_is_prescribed`, `common_dose_range`, and `side_effects`.",
   "",
   "FORMATTING: Return ONLY a raw, valid JSON object with these exact 9 keys (and no others):",
   JSON.stringify(EDUCATIONAL_FIELDS, null, 2),
@@ -428,33 +444,53 @@ async function enrichMedication(row, stats) {
     stats.skippedNoKey++;
     return;
   }
+  // --re-scrape-name "<sub>": force re-scrape of rows whose name contains the
+  // substring, ignoring cached raw_scraped_context so the new (possibly
+  // multi-monograph) context replaces the old single-monograph text.
+  const reScrapeNameMatch =
+    RE_SCRAPE_NAME && name.toLowerCase().includes(RE_SCRAPE_NAME.toLowerCase());
   try {
-    // Prefer previously-scraped text cached in the DB; else live-scrape.
-    // If scraper returns null (not in NZF), cache NOT_IN_NZF marker + route to device prompt.
-    // --re-scrape overrides the cache: if the cached value is NOT_IN_NZF,
-    // clear it and re-scrape with the fixed fuzzy matcher.
     let nzfText = null;
     const cached = row.raw_scraped_context ? String(row.raw_scraped_context).trim() : "";
-    if (cached && cached !== NOT_IN_NZF_MARKER) {
+    // --re-scrape-all-cached: re-scrape any row that has cached context. We then
+    // skip the GLM call unless the new scrape found multi-monograph content
+    // (detected via "=== NZF MONOGRAPH 2/") or the text changed substantially —
+    // this saves API tokens on the many drugs with only one monograph.
+    const reScrapeAllCachedMatch = RE_SCRAPE_ALL_CACHED && cached && cached !== NOT_IN_NZF_MARKER;
+    if (cached && cached !== NOT_IN_NZF_MARKER && !reScrapeNameMatch && !reScrapeAllCachedMatch) {
       nzfText = cached;
-    } else if (cached === NOT_IN_NZF_MARKER && !RE_SCRAPE) {
-      // Use the cached NOT_IN_NZF marker (skip re-scraping).
+    } else if (cached === NOT_IN_NZF_MARKER && !RE_SCRAPE && !reScrapeNameMatch) {
       nzfText = NOT_IN_NZF_MARKER;
     } else if (!NO_SCRAPE) {
-      // Either no cache, or --re-scrape is clearing a NOT_IN_NZF marker.
       const scraped = await scrapeNzfForMedication(name);
       if (scraped) {
-        // Re-scrape found a monograph! This was a false negative from the old scraper.
-        if (RE_SCRAPE && cached === NOT_IN_NZF_MARKER) {
-          stats.reScrapeFound++;
-        }
-        nzfText = scraped;
-        stats.scraped++;
         if (!DRY_RUN) {
           await persistScrapedContext(row.id, scraped);
         }
+        if (reScrapeAllCachedMatch) {
+          stats.scraped++;
+          const isMultiMono = scraped.includes("=== NZF MONOGRAPH 2/");
+          const changedSubstantially =
+            Math.abs(scraped.length - cached.length) > Math.max(200, cached.length * 0.1);
+          if (isMultiMono) {
+            stats.multiMonographFound = (stats.multiMonographFound || 0) + 1;
+            console.log(`  [multi-mono] "${name}" now has 2+ monographs (re-enriching)`);
+            nzfText = scraped;
+          } else if (changedSubstantially) {
+            stats.contextChanged = (stats.contextChanged || 0) + 1;
+            nzfText = scraped;
+          } else {
+            stats.skippedUnchanged = (stats.skippedUnchanged || 0) + 1;
+            return;
+          }
+        } else {
+          if ((RE_SCRAPE || reScrapeNameMatch) && cached === NOT_IN_NZF_MARKER) {
+            stats.reScrapeFound++;
+          }
+          nzfText = scraped;
+          stats.scraped++;
+        }
       } else {
-        // No NZF monograph found — cache the NOT_IN_NZF marker so we don't re-scrape.
         nzfText = NOT_IN_NZF_MARKER;
         stats.scrapeMissed++;
         if (!DRY_RUN) {
@@ -526,6 +562,52 @@ async function fetchRowsNeedingEnrichment() {
   const rows = [];
   let from = 0;
 
+  if (RE_SCRAPE_ALL_CACHED) {
+    // Target ALL rows that have cached (non-NOT_IN_NZF) context. Re-scrapes
+    // each one and smartly skips GLM unless multi-monograph content was found
+    // or the text changed substantially. This is the broad fix for finding
+    // all dual-use drugs across the entire DB.
+    console.log("[read] --re-scrape-all-cached: targeting all rows with cached context…");
+    while (true) {
+      const { data, error } = await supabase
+        .from("total_medications")
+        .select(SELECT_COLUMNS)
+        .not("raw_scraped_context", "is", null)
+        .neq("raw_scraped_context", NOT_IN_NZF_MARKER)
+        .order("medication_name", { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
+      if (error) throw new Error("supabase select: " + error.message);
+      if (!data || data.length === 0) break;
+      rows.push(...data);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    return rows;
+  }
+
+  if (RE_SCRAPE_NAME) {
+    // Target rows whose name contains the given substring — lets you re-scrape
+    // specific dual-use drugs (e.g. --re-scrape-name "methotrexate") whose
+    // cached raw_scraped_context only captured one of multiple monographs.
+    console.log(`[read] --re-scrape-name: targeting rows matching "${RE_SCRAPE_NAME}"…`);
+    while (true) {
+      const { data, error } = await supabase
+        .from("total_medications")
+        .select(SELECT_COLUMNS)
+        .ilike("medication_name", `%${RE_SCRAPE_NAME}%`)
+        .order("medication_name", { ascending: true })
+        .range(from, from + PAGE_SIZE - 1);
+      if (error) throw new Error("supabase select: " + error.message);
+      if (!data || data.length === 0) break;
+      // No blank-field filter — the whole point is to re-enrich fully-populated
+      // rows whose old single-monograph context produced one-sided content.
+      rows.push(...data);
+      if (data.length < PAGE_SIZE) break;
+      from += PAGE_SIZE;
+    }
+    return rows;
+  }
+
   if (RE_SCRAPE) {
     // Target rows previously cached as NOT_IN_NZF — these may be real drugs
     // that the old exact-match scraper missed (e.g. Enalapril, Diltiazem).
@@ -583,6 +665,8 @@ async function main() {
   console.log("Mode          : " + (DRY_RUN ? "DRY RUN (no writes)" : "LIVE"));
   console.log("DB cap        : " + (NO_DB_CAP ? "DISABLED (--no-db-cap)" : `${DB_VARCHAR_CAP} chars`));
   console.log("Re-scrape     : " + (RE_SCRAPE ? "ENABLED — re-scraping NOT_IN_NZF rows with fixed fuzzy matcher" : "no"));
+  console.log("Re-scrape name: " + (RE_SCRAPE_NAME ? `"${RE_SCRAPE_NAME}" — force re-scrape of matching rows (multi-monograph fix)` : "no"));
+  console.log("Re-scrape all : " + (RE_SCRAPE_ALL_CACHED ? "ENABLED — re-scraping all cached rows; only re-enriching multi-monograph/changed" : "no"));
   console.log("Limit         : " + (LIMIT ? String(LIMIT) : "no cap"));
   console.log("-".repeat(70));
 
@@ -644,9 +728,14 @@ async function main() {
   console.log("Succeeded : " + stats.succeeded + (DRY_RUN ? " (dry-run, no writes)" : ""));
   console.log("Empty JSON: " + stats.empty);
   console.log("Failed    : " + stats.failed);
-  if (RE_SCRAPE) {
+  if (RE_SCRAPE || RE_SCRAPE_NAME) {
     console.log("Re-scraped: " + stats.scraped + " now found (" + stats.scrapeMissed + " still missing → device prompt)");
     console.log("Upgraded  : " + stats.reScrapeFound + " rows upgraded from device disclaimer to real clinical content");
+  } else if (RE_SCRAPE_ALL_CACHED) {
+    console.log("Re-scraped   : " + stats.scraped + " rows re-scraped");
+    console.log("Multi-mono   : " + (stats.multiMonographFound || 0) + " rows now have 2+ monographs (re-enriched)");
+    console.log("Context diff : " + (stats.contextChanged || 0) + " rows with changed text (re-enriched)");
+    console.log("Skipped      : " + (stats.skippedUnchanged || 0) + " unchanged single-monograph rows (GLM skipped, tokens saved)");
   } else {
     console.log("Scraped   : " + stats.scraped + " new (" + stats.scrapeMissed + " missed → device prompt)");
   }
