@@ -110,14 +110,32 @@ function Disclaimer() {
         guarantees regarding algorithmic perfection and accept no liability for
         data anomalies emerging from automated synthesis models.
       </P>
-      <H>4. Medication Database and Brand Name Updates</H>
+      <H>4. Source of Medication Information (NZ Formulary)</H>
+      <P>
+        All medication information presented in ScriptPal NZ is derived from the
+        New Zealand Formulary (NZF, nzf.org.nz). Reference content is retrieved
+        from the NZF via automated web-scraping and retrieval-augmented
+        generation (RAG). Raw NZF source material is fetched programmatically,
+        indexed, and then synthesised by an AI model into the plain-English
+        summaries shown in the app. While the NZF is a trusted New Zealand
+        clinical reference, ScriptPal NZ is not affiliated with, endorsed by, or
+        partnered with the New Zealand Formulary or its publishers. The NZF is
+        © New Zealand Formulary and is used here solely for educational,
+        non-commercial purposes under the NZF's formulary licence terms. Any
+        retrieval, indexing, or synthesis errors introduced during the
+        web-scraping/RAG pipeline are the responsibility of ScriptPal NZ, not
+        the NZF. Where the NZF and ScriptPal NZ differ, the NZF source is
+        authoritative.
+      </P>
+      <H>5. Medication Database and Brand Name Updates</H>
       <P>
         The ScriptPal NZ medication database, including brand names, is reviewed and
         updated approximately every three months in line with changes to the New
-        Zealand Universal List of Medicines (NZULM) and Medsafe approvals.
-        ScriptPal NZ cannot guarantee that all information is current at the time of
-        viewing. Always confirm current brand name availability and prescribing
-        information with your pharmacist or prescribing clinician.
+        Zealand Universal List of Medicines (NZULM), the New Zealand Formulary
+        (NZF), and Medsafe approvals. ScriptPal NZ cannot guarantee that all
+        information is current at the time of viewing. Always confirm current
+        brand name availability and prescribing information with your pharmacist
+        or prescribing clinician.
       </P>
       <H>5. Emergency Situations</H>
       <P>
