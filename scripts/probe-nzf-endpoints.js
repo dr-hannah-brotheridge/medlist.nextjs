@@ -3,7 +3,7 @@
 // Step 0a.3: Probe the discovered NZF endpoints to find monograph URLs.
 const fs = require('fs');
 const COOKIE = '_formularyLicence=Accepted';
-const UA = 'MedListEducationalBot/1.0';
+const UA = 'ScriptPalNzEducationalBot/1.0';
 
 async function get(url, asJson = false) {
   console.log('\n' + '='.repeat(78));

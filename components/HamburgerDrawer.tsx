@@ -18,7 +18,7 @@ const LINKS = [
   { href: "/settings", label: "My Settings", Icon: UserIcon },
   { href: "/account", label: "Account", Icon: ShieldIcon },
   { href: "/legal", label: "Legal Information", Icon: ClipboardIcon },
-  { href: "/about", label: "About MedList", Icon: AlertIcon },
+  { href: "/about", label: "About ScriptPal NZ", Icon: AlertIcon },
 ];
 
 export function HamburgerDrawer() {
@@ -76,7 +76,7 @@ export function HamburgerDrawer() {
           />
           <div className="absolute inset-y-0 right-0 flex w-72 max-w-[80%] flex-col overflow-y-auto bg-card shadow-xl">
             <div className="flex items-center justify-between border-b border-slate-200 px-4 py-4">
-              <span className="text-lg font-bold text-brand-600">MedList</span>
+              <span className="text-lg font-bold text-brand-600">ScriptPal NZ</span>
               <button
                 aria-label="Close menu"
                 onClick={() => setOpen(false)}

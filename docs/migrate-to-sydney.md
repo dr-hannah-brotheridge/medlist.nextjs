@@ -1,4 +1,4 @@
-# Migrating MedList's Supabase project to Sydney (ap-southeast-2)
+# Migrating ScriptPal NZ's Supabase project to Sydney (ap-southeast-2)
 
 **Why:** NHI numbers + prescription data are health information under the NZ Privacy
 Act 2020 / Health Information Privacy Code 2020 (IPP 12). Supabase has no NZ region;

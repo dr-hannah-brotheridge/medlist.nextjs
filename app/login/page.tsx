@@ -98,7 +98,7 @@ function LoginForm() {
   }
 
   return (
-    <AuthShell title="Sign in" subtitle="Welcome back to MedList.">
+    <AuthShell title="Sign in" subtitle="Welcome back to ScriptPal NZ.">
       {magicSent ? (
         <div className="space-y-4">
           <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700">

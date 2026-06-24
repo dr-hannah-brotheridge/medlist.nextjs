@@ -83,7 +83,7 @@ export function OnboardingFlow() {
       <header className="px-4 pt-6">
         <div className="mx-auto flex max-w-md items-center gap-2">
           <p className="text-lg font-extrabold tracking-tight text-brand-600">
-            MedList
+            ScriptPal NZ
           </p>
           <ProgressDots step={step} />
         </div>
@@ -164,7 +164,7 @@ function StepHook({ onNext }: { onNext: () => void }) {
       </h1>
       <p className="mx-auto mt-4 max-w-sm text-base leading-relaxed text-slate-600">
         Ever been baffled by why you're taking a pill or what its brand name
-        means? MedList translates complex medical jargon into plain English, so
+        means? ScriptPal NZ translates complex medical jargon into plain English, so
         you can take control of your health.
       </p>
       <button
@@ -457,7 +457,7 @@ function StepProfile({
           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:opacity-60"
         >
           {saving ? <SpinnerIcon width={20} height={20} /> : null}
-          {saving ? "Entering…" : "Enter MedList 🚀"}
+          {saving ? "Entering…" : "Enter ScriptPal NZ 🚀"}
         </button>
       </div>
     </form>

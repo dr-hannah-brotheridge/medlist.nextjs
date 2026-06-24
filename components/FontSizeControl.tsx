@@ -10,7 +10,8 @@ const SIZES: { id: Size; label: string }[] = [
   { id: "xl", label: "A++" },
 ];
 
-const STORAGE_KEY = "medlist-fontsize";
+const STORAGE_KEY = "scriptpal-fontsize";
+const LEGACY_STORAGE_KEY = "medlist-fontsize";
 
 /**
  * Dead-simple font scale utility shown at the top of the authenticated shell.
@@ -24,7 +25,9 @@ export function FontSizeControl() {
   // Read persisted preference on mount (client-only to avoid SSR mismatch).
   useEffect(() => {
     setMounted(true);
-    const stored = localStorage.getItem(STORAGE_KEY) as Size | null;
+    const stored =
+      (localStorage.getItem(STORAGE_KEY) as Size | null) ??
+      (localStorage.getItem(LEGACY_STORAGE_KEY) as Size | null);
     if (stored === "lg" || stored === "xl") {
       setSize(stored);
       document.documentElement.setAttribute("data-fontsize", stored);

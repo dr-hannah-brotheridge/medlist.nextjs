@@ -4,7 +4,7 @@ import { getAdminUser } from "@/lib/admin-auth";
 /**
  * Claude enrichment endpoint (SHELL) — Human-in-the-Loop RAG.
  *
- * Per the MedList Compliance Action Plan (§5), drug profiles must NOT be written
+ * Per the ScriptPal NZ Compliance Action Plan (§5), drug profiles must NOT be written
  * by the model from memory. The pipeline is strictly retrieval-augmented:
  *   Step 1 — Pull the raw source text for `medication_name` from an open-access
  *            New Zealand source (NZ Formulary / NZULM API). [source not yet wired]

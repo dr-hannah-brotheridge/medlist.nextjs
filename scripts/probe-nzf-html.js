@@ -17,7 +17,7 @@ try {
   });
 } catch (e) { /* no .env.local — fine */ }
 
-const UA = 'MedListEducationalBot/1.0 (+mailto:support@medlist.nz; educational purposes; respectful scraping; max 1 req/sec)';
+const UA = 'ScriptPalNzEducationalBot/1.0 (+mailto:support@scriptpal.nz; educational purposes; respectful scraping; max 1 req/sec)';
 
 function redirHeaders(res) {
   return {

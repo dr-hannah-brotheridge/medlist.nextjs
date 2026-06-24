@@ -4,15 +4,15 @@ import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const metadata: Metadata = {
-  title: "MedList",
+  title: "ScriptPal NZ",
   description:
-    "Track your medications and generate a clear summary for your doctor.",
+    "Understand your scripts and generate a clear summary for your doctor.",
   manifest: "/manifest.webmanifest",
-  applicationName: "MedList",
+  applicationName: "ScriptPal NZ",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "MedList",
+    title: "ScriptPal NZ",
   },
   icons: {
     icon: [

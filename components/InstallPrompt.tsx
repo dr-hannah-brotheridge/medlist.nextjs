@@ -33,7 +33,8 @@ export function InstallPrompt() {
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     setPlatform(isAndroid ? "android" : isIOS ? "ios" : "other");
 
-    const dismissed = localStorage.getItem("medlist-install-dismissed");
+    const dismissed = localStorage.getItem("scriptpal-install-dismissed") ??
+      localStorage.getItem("medlist-install-dismissed");
 
     function onBeforeInstall(e: Event) {
       e.preventDefault();
@@ -48,7 +49,8 @@ export function InstallPrompt() {
 
   useEffect(() => {
     if (platform === "ios") {
-      const dismissed = localStorage.getItem("medlist-install-dismissed");
+      const dismissed = localStorage.getItem("scriptpal-install-dismissed") ??
+      localStorage.getItem("medlist-install-dismissed");
       const standalone =
         window.matchMedia("(display-mode: standalone)").matches ||
         (window.navigator as unknown as { standalone?: boolean }).standalone ===
@@ -59,7 +61,7 @@ export function InstallPrompt() {
 
   function dismiss() {
     setShowCard(false);
-    localStorage.setItem("medlist-install-dismissed", "1");
+    localStorage.setItem("scriptpal-install-dismissed", "1");
   }
 
   async function install() {
@@ -83,14 +85,14 @@ export function InstallPrompt() {
           <DownloadIcon width={22} height={22} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="font-semibold text-slate-900">Install MedList</p>
+          <p className="font-semibold text-slate-900">Install ScriptPal NZ</p>
           {platform === "ios" ? (
             <p className="text-sm text-slate-600">
               Tap the Safari Share button, then “Add to Home Screen”.
             </p>
           ) : (
             <p className="text-sm text-slate-600">
-              Add MedList to your home screen for quick, offline access.
+              Add ScriptPal NZ to your home screen for quick, offline access.
             </p>
           )}
         </div>

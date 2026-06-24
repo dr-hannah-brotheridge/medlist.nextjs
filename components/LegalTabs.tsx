@@ -64,17 +64,17 @@ function UL({ items }: { items: string[] }) {
 function Disclaimer() {
   return (
     <div>
-      <H>1. Purpose of MedList</H>
+      <H>1. Purpose of ScriptPal NZ</H>
       <P>
-        MedList is a personal medication management application designed to help
+        ScriptPal NZ is a personal medication management application designed to help
         users record, organise, and collate information about their medications
         for their own reference and to facilitate communication with healthcare
-        professionals. MedList is intended for educational and informational
+        professionals. ScriptPal NZ is intended for educational and informational
         purposes only.
       </P>
       <H>2. Not a Medical or Prescribing Tool</H>
       <P>
-        MedList is NOT a medical device, prescribing tool, or clinical decision
+        ScriptPal NZ is NOT a medical device, prescribing tool, or clinical decision
         support system. The application does not:
       </P>
       <UL
@@ -87,7 +87,7 @@ function Disclaimer() {
         ]}
       />
       <P>
-        Nothing contained within MedList should be interpreted as medical advice
+        Nothing contained within ScriptPal NZ should be interpreted as medical advice
         or used as a substitute for professional medical consultation, diagnosis,
         or treatment.
       </P>
@@ -106,22 +106,22 @@ function Disclaimer() {
         While all clinical reference structures are subject to human-in-the-loop
         review protocols against local frameworks, the user acknowledges that
         AI-assisted translation modules can exhibit informational anomalies,
-        localised discrepancies, or omissions. MedList and its operators make no
+        localised discrepancies, or omissions. ScriptPal NZ and its operators make no
         guarantees regarding algorithmic perfection and accept no liability for
         data anomalies emerging from automated synthesis models.
       </P>
       <H>4. Medication Database and Brand Name Updates</H>
       <P>
-        The MedList medication database, including brand names, is reviewed and
+        The ScriptPal NZ medication database, including brand names, is reviewed and
         updated approximately every three months in line with changes to the New
         Zealand Universal List of Medicines (NZULM) and Medsafe approvals.
-        MedList cannot guarantee that all information is current at the time of
+        ScriptPal NZ cannot guarantee that all information is current at the time of
         viewing. Always confirm current brand name availability and prescribing
         information with your pharmacist or prescribing clinician.
       </P>
       <H>5. Emergency Situations</H>
       <P>
-        MedList is not designed for use in medical emergencies. If you are
+        ScriptPal NZ is not designed for use in medical emergencies. If you are
         experiencing a medical emergency, call 111 (New Zealand) or attend your
         nearest emergency department immediately. For urgent concerns, contact
         your doctor, pharmacist, or Healthline (0800 611 116).
@@ -129,7 +129,7 @@ function Disclaimer() {
       <H>6. Limitation of Liability</H>
       <P>
         To the fullest extent permitted by New Zealand law, Dr Hannah Brotheridge
-        and MedList accept no liability for any loss, harm, injury, or damage
+        and ScriptPal NZ accept no liability for any loss, harm, injury, or damage
         arising from your use of or reliance upon information within this
         application.
       </P>
@@ -142,10 +142,10 @@ function Terms() {
     <div>
       <H>1. Acceptance of Terms</H>
       <P>
-        By registering for and using MedList, you confirm that you are 16 years
+        By registering for and using ScriptPal NZ, you confirm that you are 16 years
         of age or older (or using the App under parental/guardian supervision),
         that you have read and agree to these Terms, the Medical Disclaimer, and
-        the Privacy Policy, that you understand MedList is not a medical device
+        the Privacy Policy, that you understand ScriptPal NZ is not a medical device
         or prescribing tool, and that you accept full responsibility for how you
         use the information within the App.
       </P>
@@ -157,7 +157,7 @@ function Terms() {
         access.
       </P>
       <H>3. Acceptable Use</H>
-      <P>You agree to use MedList only for personal medication management. You must not:</P>
+      <P>You agree to use ScriptPal NZ only for personal medication management. You must not:</P>
       <UL
         items={[
           "Use the App for any unlawful or fraudulent purpose",
@@ -171,25 +171,25 @@ function Terms() {
       <H>4. Accuracy of Information</H>
       <P>
         You are solely responsible for ensuring all information you enter is
-        accurate and up to date. MedList does not verify user-entered data.
+        accurate and up to date. ScriptPal NZ does not verify user-entered data.
         Always review your summary with a qualified healthcare professional
         before using it for clinical purposes.
       </P>
       <H>5. Third-Party Services</H>
       <P>
-        MedList is built with Next.js and hosted on Vercel (vercel.com); data
+        ScriptPal NZ is built with Next.js and hosted on Vercel (vercel.com); data
         storage and authentication are provided by Supabase (supabase.com). Your
-        use of MedList is also subject to the terms of service and privacy
+        use of ScriptPal NZ is also subject to the terms of service and privacy
         policies of these providers.
       </P>
       <H>6. Educational Content & AI Assistance</H>
       <P>
-        The educational medication content within MedList has been created with
+        The educational medication content within ScriptPal NZ has been created with
         AI assistance and validated by Dr Hannah Brotheridge (MBChB). While all
         clinical reference structures are subject to human-in-the-loop review
         protocols against local frameworks, the user acknowledges that AI-assisted
         translation modules can exhibit informational anomalies, localised
-        discrepancies, or omissions. MedList and its operators make no guarantees
+        discrepancies, or omissions. ScriptPal NZ and its operators make no guarantees
         regarding algorithmic perfection and accept no liability for data
         anomalies emerging from automated synthesis models. We may update,
         modify, or remove educational content at any time without notice.
@@ -201,7 +201,7 @@ function Terms() {
       </P>
       <H>8. Contact</H>
       <P>
-        Dr Hannah Brotheridge, Developer, MedList — Christchurch, New Zealand.
+        Dr Hannah Brotheridge, Developer, ScriptPal NZ — Christchurch, New Zealand.
         Email: hannah.brotheridge@gmail.com
       </P>
     </div>
@@ -212,7 +212,7 @@ function Privacy() {
   return (
     <div>
       <P>
-        This Privacy Policy explains how MedList, developed by Dr Hannah
+        This Privacy Policy explains how ScriptPal NZ, developed by Dr Hannah
         Brotheridge, collects, stores, uses, and protects your personal
         information, in line with the New Zealand Privacy Act 2020 and the Health
         Information Privacy Code 2020.

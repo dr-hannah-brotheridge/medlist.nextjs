@@ -14,7 +14,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-30 border-b border-slate-200 bg-card/95 backdrop-blur">
         <div className="mx-auto flex max-w-lg items-center justify-between px-4 py-3">
           <Link href="/home" className="text-xl font-extrabold text-brand-600">
-            MedList
+            ScriptPal NZ
           </Link>
           <HamburgerDrawer />
         </div>

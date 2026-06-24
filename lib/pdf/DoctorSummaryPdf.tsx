@@ -212,7 +212,7 @@ export function DoctorSummaryPdf({
   return (
     <Document
       title={`Medical Summary — ${fullName}`}
-      author="MedList"
+      author="ScriptPal NZ"
       subject="Patient medical summary"
     >
       <Page size="A4" style={styles.page}>
@@ -310,7 +310,7 @@ export function DoctorSummaryPdf({
 
         {/* Footer */}
         <View style={styles.footer} fixed>
-          <Text>MedList · Medical Summary</Text>
+          <Text>ScriptPal NZ · Medical Summary</Text>
           <Text
             render={({ pageNumber, totalPages }) =>
               `Page ${pageNumber} of ${totalPages}`

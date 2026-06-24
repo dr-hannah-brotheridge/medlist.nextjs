@@ -12,7 +12,7 @@ export function AuthShell({
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-extrabold tracking-tight text-brand-600">
-            MedList
+            ScriptPal NZ
           </h1>
           <p className="mt-1 text-sm font-medium text-slate-700">
             Your medications, clearly organised.

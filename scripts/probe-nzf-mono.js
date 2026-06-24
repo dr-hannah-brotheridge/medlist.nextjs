@@ -4,7 +4,7 @@
 // inspect its section structure with cheerio-like regex parsing.
 const fs = require('fs');
 const COOKIE = '_formularyLicence=Accepted';
-const UA = 'MedListEducationalBot/1.0';
+const UA = 'ScriptPalNzEducationalBot/1.0';
 const MONO_URL = 'https://nzf.org.nz/nzf_2439';
 
 (async () => {

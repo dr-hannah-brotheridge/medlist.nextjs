@@ -16,7 +16,7 @@
 const cheerio = require('cheerio');
 
 const NZF_BASE = 'https://nzf.org.nz';
-const UA = 'MedListEducationalBot/1.0 (+mailto:support@medlist.nz; educational purposes; respectful scraping; max 1 req/sec)';
+const UA = 'ScriptPalNzEducationalBot/1.0 (+mailto:support@scriptpal.nz; educational purposes; respectful scraping; max 1 req/sec)';
 const TIMEOUT_MS = 15000;
 const MAX_RETRIES = 3;
 const SKIP_SECTIONS = new Set(['Preparation Group', 'Community Funding rules', 'Notes/Guidelines']);

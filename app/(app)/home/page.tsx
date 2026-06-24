@@ -72,7 +72,7 @@ export default async function HomePage() {
           Welcome{firstName ? `, ${firstName}` : ""}
         </p>
         <h1 className="text-3xl font-extrabold tracking-tight text-brand-600">
-          MedList
+          ScriptPal NZ
         </h1>
         <p className="mt-1 text-sm text-slate-500">
           A simple way to track your medications and generate a clear list for

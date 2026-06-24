@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { AlertIcon, SpinnerIcon } from "@/components/icons";
 
 const ACK_COPY =
-  "I understand MedList acts strictly as a digital logbook. It is entirely dependent on my ability to read and manually transcribe the accurate text from my physical pharmacy prescription label. MedList does not auto-verify, sync, or fix my personal inputs.";
+  "I understand ScriptPal NZ acts strictly as a digital logbook. It is entirely dependent on my ability to read and manually transcribe the accurate text from my physical pharmacy prescription label. ScriptPal NZ does not auto-verify, sync, or fix my personal inputs.";
 
 /**
  * One-time, unskippable acknowledgment shown the first time a user opens the

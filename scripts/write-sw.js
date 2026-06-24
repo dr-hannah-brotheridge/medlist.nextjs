@@ -5,7 +5,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const SW = `/* MedList service worker — lightweight app-shell cache for offline launch.
+const SW = `/* ScriptPal NZ service worker — lightweight app-shell cache for offline launch.
  * Bump CACHE_VERSION when shipping new static assets.
  */
 const CACHE_VERSION = "medlist-v1";

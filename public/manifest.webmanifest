@@ -1,7 +1,8 @@
 {
-  "name": "MedList — Medication Tracker",
-  "short_name": "MedList",
-  "description": "Track your medications and generate a clear summary for your doctor.",
+  "name": "ScriptPal NZ — Medication Tracker",
+  "short_name": "ScriptPal NZ",
+  "description": "Understand your scripts and generate a clear summary for your doctor.",
+  "lang": "en-NZ",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
