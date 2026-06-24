@@ -13,15 +13,15 @@ import { SpinnerIcon } from "@/components/icons";
  *  2. Hash fragment (`#access_token=...`) — detected via getSession()/
  *     onAuthStateChange (magic links / email links often arrive this way).
  *
- * Replacing the old server route.ts with this client page fixes the
- * "blank Google page" issue: the server route could not read the hash
- * fragment (browsers never send it server-side), so hash-based magic-link
- * logins silently failed.
+ * IMPORTANT: after detecting a session we use window.location.href = next
+ * for a hard full-page navigation. This is more reliable than router.replace
+ * for post-auth redirects because it guarantees the server sees the new auth
+ * cookie when rendering the protected route layout (which calls getUser()),
+ * preventing a redirect-to-login / onboarding loop.
  *
- * IMPORTANT: after detecting a session we call router.refresh() BEFORE
- * router.replace(next). This ensures the server picks up the new auth
- * cookie before rendering the protected route layout (which calls
- * getUser()), preventing a redirect-to-login loop.
+ * If exchangeCodeForSession fails (e.g. PKCE code verifier mismatch when
+ * the email link opens in a different browser session), we fall through to
+ * try getSession() and onAuthStateChange before showing an error.
  */
 export default function AuthCallbackPage() {
   return (
@@ -50,43 +50,44 @@ function AuthCallbackInner() {
     const next = searchParams.get("next") || "/home";
     let done = false;
 
+    async function navigateAfterSession() {
+      // Sync onboarding draft if present (best-effort).
+      try {
+        const { syncOnboardingDraft } = await import("@/lib/onboarding");
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          await syncOnboardingDraft(data.session.user.id);
+        }
+      } catch {
+        /* non-fatal */
+      }
+      // Hard redirect so the server picks up the new auth cookie.
+      window.location.href = next;
+    }
+
     async function tryCodeExchange() {
       const code = searchParams.get("code");
       if (!code) return false;
       const { error } = await supabase.auth.exchangeCodeForSession(code);
       if (error) {
-        setError("Could not verify the sign-in link. Please try again.");
-        return true;
+        // Don't show error yet — fall through to try getSession() and
+        // onAuthStateChange, which may succeed if the session was
+        // established via the hash fragment.
+        return false;
       }
       done = true;
-      // Refresh first so the server picks up the new auth cookie before we
-      // navigate to a protected route whose server layout calls getUser().
-      router.refresh();
-      router.replace(next);
+      await navigateAfterSession();
       return true;
     }
 
     async function tryHashSession() {
       // Magic links can deliver tokens in the URL hash. The @supabase/ssr
       // client automatically parses them into a session on load; calling
-      // getSession() forces detection, and onAuthStateChange catches the
-      // SIGNED_IN event that fires when the hash is consumed.
+      // getSession() forces detection.
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         done = true;
-        // Sync onboarding draft if present (best-effort).
-        try {
-          const { syncOnboardingDraft } = await import("@/lib/onboarding");
-          if (data.session.user) {
-            await syncOnboardingDraft(data.session.user.id);
-          }
-        } catch {
-          /* non-fatal */
-        }
-        // Refresh first so the server picks up the new auth cookie before we
-        // navigate to a protected route whose server layout calls getUser().
-        router.refresh();
-        router.replace(next);
+        await navigateAfterSession();
         return true;
       }
       return false;
@@ -95,37 +96,31 @@ function AuthCallbackInner() {
     (async () => {
       const handled = (await tryCodeExchange()) || (await tryHashSession());
       if (!handled && !done) {
-        // Listen briefly for an auth state change (hash token detection).
+        // Listen for an auth state change (hash token detection or
+        // delayed session establishment).
         const { data: sub } = supabase.auth.onAuthStateChange(
           async (event, session) => {
-            if (event === "SIGNED_IN" && session && !done) {
+            if (
+              (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
+              session &&
+              !done
+            ) {
               done = true;
               sub.subscription.unsubscribe();
-              try {
-                const { syncOnboardingDraft } = await import(
-                  "@/lib/onboarding"
-                );
-                if (session.user) {
-                  await syncOnboardingDraft(session.user.id);
-                }
-              } catch {
-                /* non-fatal */
-              }
-              // Refresh first so the server picks up the new auth cookie
-              // before we navigate to a protected route.
-              router.refresh();
-              router.replace(next);
+              await navigateAfterSession();
             }
           },
         );
 
-        // Safety timeout: if nothing happens after 8s, surface an error.
+        // Safety timeout: if nothing happens after 10s, surface an error.
         setTimeout(() => {
           if (!done) {
             sub.subscription.unsubscribe();
-            setError("Sign-in link expired or is invalid. Please try again.");
+            setError(
+              "Sign-in link expired or is invalid. Please request a new link.",
+            );
           }
-        }, 8000);
+        }, 10000);
       }
     })();
   }, [router, searchParams]);
