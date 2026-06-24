@@ -1,7 +1,7 @@
 /* ScriptPal NZ service worker — lightweight app-shell cache for offline launch.
  * Bump CACHE_VERSION when shipping new static assets.
  */
-const CACHE_VERSION = "medlist-v2";
+const CACHE_VERSION = "medlist-v3";
 const APP_SHELL = [
   "/",
   "/home",

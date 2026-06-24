@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "ScriptPal NZ — Medication Tracker",
   "short_name": "ScriptPal NZ",
   "description": "Understand your scripts and generate a clear summary for your doctor.",
@@ -6,6 +7,7 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "browser"],
   "orientation": "portrait",
   "background_color": "#f7f9fb",
   "theme_color": "#237867",
