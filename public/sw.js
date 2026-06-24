@@ -1,7 +1,7 @@
 /* MedList service worker — lightweight app-shell cache for offline launch.
  * Bump CACHE_VERSION when shipping new static assets.
  */
-const CACHE_VERSION = "medlist-v1";
+const CACHE_VERSION = "medlist-v2";
 const APP_SHELL = [
   "/",
   "/home",
@@ -11,6 +11,7 @@ const APP_SHELL = [
   "/favicon.svg",
   "/icon-192.png",
   "/icon-512.png",
+  "/icon-maskable-512.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -56,12 +57,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Cache-first for same-origin static assets (JS, CSS, fonts, images).
+  // Stale-while-revalidate for same-origin static assets (JS, CSS, fonts, images).
+  // Serves cached version immediately (fast) but ALWAYS fetches & updates in the
+  // background, so users get the latest code on their next page load — this
+  // prevents the "old login page with no magic link button" problem.
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request)
+        const fetchPromise = fetch(request)
           .then((response) => {
             if (response.ok) {
               const copy = response.clone();
@@ -70,6 +73,8 @@ self.addEventListener("fetch", (event) => {
             return response;
           })
           .catch(() => cached);
+        // Return cached immediately if available, otherwise wait for network.
+        return cached || fetchPromise;
       }),
     );
   }
