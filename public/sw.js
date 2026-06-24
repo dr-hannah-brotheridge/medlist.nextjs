@@ -7,8 +7,6 @@ const APP_SHELL = [
   "/home",
   "/login",
   "/manifest.webmanifest",
-  "/icon.svg",
-  "/favicon.svg",
   "/icon-192.png",
   "/icon-512.png",
   "/icon-maskable-512.png",
@@ -57,14 +55,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Stale-while-revalidate for same-origin static assets (JS, CSS, fonts, images).
-  // Serves cached version immediately (fast) but ALWAYS fetches & updates in the
-  // background, so users get the latest code on their next page load — this
-  // prevents the "old login page with no magic link button" problem.
+  // Cache-first for same-origin static assets (JS, CSS, fonts, images).
   if (url.origin === self.location.origin) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        const fetchPromise = fetch(request)
+        if (cached) return cached;
+        return fetch(request)
           .then((response) => {
             if (response.ok) {
               const copy = response.clone();
@@ -73,8 +69,6 @@ self.addEventListener("fetch", (event) => {
             return response;
           })
           .catch(() => cached);
-        // Return cached immediately if available, otherwise wait for network.
-        return cached || fetchPromise;
       }),
     );
   }

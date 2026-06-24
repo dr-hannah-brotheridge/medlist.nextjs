@@ -8,16 +8,15 @@ const path = require("path");
 const SW = `/* ScriptPal NZ service worker — lightweight app-shell cache for offline launch.
  * Bump CACHE_VERSION when shipping new static assets.
  */
-const CACHE_VERSION = "medlist-v1";
+const CACHE_VERSION = "medlist-v2";
 const APP_SHELL = [
   "/",
   "/home",
   "/login",
   "/manifest.webmanifest",
-  "/icon.svg",
-  "/favicon.svg",
   "/icon-192.png",
   "/icon-512.png",
+  "/icon-maskable-512.png",
 ];
 
 self.addEventListener("install", (event) => {
