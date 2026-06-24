@@ -3,21 +3,15 @@
 import { useEffect } from "react";
 
 /**
- * Registers the service worker in production only, so dev assets are never
- * cached and you always see fresh changes during local work.
+ * Registers the service worker on all pages so the app is installable
+ * as a PWA. The SW provides the offline app-shell cache.
  */
 export function ServiceWorkerRegister() {
   useEffect(() => {
-    if (
-      typeof window !== "undefined" &&
-      "serviceWorker" in navigator &&
-      process.env.NODE_ENV === "production"
-    ) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .catch(() => {
-          /* SW registration failures are non-fatal; the app still works online. */
-        });
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+        /* SW registration failures are non-fatal; the app still works online. */
+      });
     }
   }, []);
 
