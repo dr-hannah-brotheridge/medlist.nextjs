@@ -51,7 +51,6 @@ function AuthCallbackInner() {
     let done = false;
 
     async function navigateAfterSession() {
-      // Sync onboarding draft if present (best-effort).
       try {
         const { syncOnboardingDraft } = await import("@/lib/onboarding");
         const { data } = await supabase.auth.getSession();
@@ -61,29 +60,33 @@ function AuthCallbackInner() {
       } catch {
         /* non-fatal */
       }
-      // Hard redirect so the server picks up the new auth cookie.
       window.location.href = next;
     }
 
     async function tryCodeExchange() {
       const code = searchParams.get("code");
       if (!code) return false;
+
       const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (error) {
-        // Don't show error yet — fall through to try getSession() and
-        // onAuthStateChange, which may succeed if the session was
-        // established via the hash fragment.
-        return false;
+      if (!error) {
+        done = true;
+        await navigateAfterSession();
+        return true;
       }
-      done = true;
-      await navigateAfterSession();
-      return true;
+
+      const { error: error2 } = await supabase.auth.exchangeCodeForSession(
+        window.location.href,
+      );
+      if (!error2) {
+        done = true;
+        await navigateAfterSession();
+        return true;
+      }
+
+      return false;
     }
 
     async function tryHashSession() {
-      // Magic links can deliver tokens in the URL hash. The @supabase/ssr
-      // client automatically parses them into a session on load; calling
-      // getSession() forces detection.
       const { data } = await supabase.auth.getSession();
       if (data.session) {
         done = true;
@@ -94,14 +97,25 @@ function AuthCallbackInner() {
     }
 
     (async () => {
+      await new Promise((r) => setTimeout(r, 500));
+
       const handled = (await tryCodeExchange()) || (await tryHashSession());
       if (!handled && !done) {
-        // Listen for an auth state change (hash token detection or
-        // delayed session establishment).
+        setTimeout(async () => {
+          if (done) return;
+          const { data } = await supabase.auth.getSession();
+          if (data.session) {
+            done = true;
+            await navigateAfterSession();
+          }
+        }, 2000);
+
         const { data: sub } = supabase.auth.onAuthStateChange(
           async (event, session) => {
             if (
-              (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") &&
+              (event === "SIGNED_IN" ||
+                event === "TOKEN_REFRESHED" ||
+                event === "INITIAL_SESSION") &&
               session &&
               !done
             ) {
@@ -112,7 +126,6 @@ function AuthCallbackInner() {
           },
         );
 
-        // Safety timeout: if nothing happens after 10s, surface an error.
         setTimeout(() => {
           if (!done) {
             sub.subscription.unsubscribe();
@@ -120,7 +133,7 @@ function AuthCallbackInner() {
               "Sign-in link expired or is invalid. Please request a new link.",
             );
           }
-        }, 10000);
+        }, 15000);
       }
     })();
   }, [router, searchParams]);
