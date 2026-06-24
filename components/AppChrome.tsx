@@ -2,7 +2,6 @@ import Link from "next/link";
 import { BottomNav } from "@/components/BottomNav";
 import { HamburgerDrawer } from "@/components/HamburgerDrawer";
 import { FontSizeControl } from "@/components/FontSizeControl";
-import { InstallPrompt } from "@/components/InstallPrompt";
 
 /**
  * Persistent authenticated shell: sticky top bar (wordmark + menu), the font
@@ -27,7 +26,6 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
       <main className="mx-auto max-w-lg px-4 pb-28 pt-5">{children}</main>
 
-      <InstallPrompt />
       <BottomNav />
     </div>
   );

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export const metadata: Metadata = {
   title: "MedList",
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         {children}
         <ServiceWorkerRegister />
+        <InstallPrompt />
       </body>
     </html>
   );

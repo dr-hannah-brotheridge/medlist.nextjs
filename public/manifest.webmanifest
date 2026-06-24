@@ -2,7 +2,7 @@
   "name": "MedList — Medication Tracker",
   "short_name": "MedList",
   "description": "Track your medications and generate a clear summary for your doctor.",
-  "start_url": "/home",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
