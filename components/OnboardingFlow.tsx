@@ -457,7 +457,7 @@ function StepProfile({
           className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-4 text-lg font-semibold text-white shadow-lg transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-300 disabled:opacity-60"
         >
           {saving ? <SpinnerIcon width={20} height={20} /> : null}
-          {saving ? "Entering…" : "Enter ScriptPal NZ 🚀"}
+          {saving ? "Entering…" : "Enter ScriptPal NZ"}
         </button>
       </div>
     </form>
