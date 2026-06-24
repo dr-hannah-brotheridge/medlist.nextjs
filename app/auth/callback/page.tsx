@@ -17,6 +17,11 @@ import { SpinnerIcon } from "@/components/icons";
  * "blank Google page" issue: the server route could not read the hash
  * fragment (browsers never send it server-side), so hash-based magic-link
  * logins silently failed.
+ *
+ * IMPORTANT: after detecting a session we call router.refresh() BEFORE
+ * router.replace(next). This ensures the server picks up the new auth
+ * cookie before rendering the protected route layout (which calls
+ * getUser()), preventing a redirect-to-login loop.
  */
 export default function AuthCallbackPage() {
   return (
@@ -54,8 +59,10 @@ function AuthCallbackInner() {
         return true;
       }
       done = true;
-      router.push(next);
+      // Refresh first so the server picks up the new auth cookie before we
+      // navigate to a protected route whose server layout calls getUser().
       router.refresh();
+      router.replace(next);
       return true;
     }
 
@@ -76,8 +83,10 @@ function AuthCallbackInner() {
         } catch {
           /* non-fatal */
         }
-        router.push(next);
+        // Refresh first so the server picks up the new auth cookie before we
+        // navigate to a protected route whose server layout calls getUser().
         router.refresh();
+        router.replace(next);
         return true;
       }
       return false;
@@ -102,8 +111,10 @@ function AuthCallbackInner() {
               } catch {
                 /* non-fatal */
               }
-              router.push(next);
+              // Refresh first so the server picks up the new auth cookie
+              // before we navigate to a protected route.
               router.refresh();
+              router.replace(next);
             }
           },
         );

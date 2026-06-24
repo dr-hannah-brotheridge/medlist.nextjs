@@ -21,6 +21,12 @@ const PAGE_SIZE = 1000;
  * brands field contains "Oxynorm").
  *
  * When `q` is empty, returns all rows (for client-side filtering).
+ *
+ * Ordering: prefers the `sort_key` column (added by migration
+ * 20260625_000001_numbers_to_bottom.sql) so that medications whose names
+ * start with a digit sort after all letter-prefixed names. If that column
+ * does not exist yet (migration not applied), falls back to ordering by
+ * `medication_name`.
  */
 async function fetchMedications(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -28,6 +34,18 @@ async function fetchMedications(
 ): Promise<MedicationListItem[]> {
   const query = q?.trim();
   const select = "id, medication_name, brands";
+
+  // Probe whether the `sort_key` column exists by selecting only it for one
+  // row. PostgREST returns an error if the column is unknown. We order by
+  // sort_key without selecting it (PostgREST supports this).
+  let orderColumn: "sort_key" | "medication_name" = "medication_name";
+  const { error: probeError } = await supabase
+    .from("total_medications")
+    .select("sort_key")
+    .range(0, 0);
+  if (!probeError) {
+    orderColumn = "sort_key";
+  }
 
   // No server-side query → fetch everything for client-side filtering.
   if (!query) {
@@ -37,7 +55,7 @@ async function fetchMedications(
       const { data, error } = await supabase
         .from("total_medications")
         .select(select)
-        .order("medication_name", { ascending: true })
+        .order(orderColumn, { ascending: true })
         .range(offset, offset + PAGE_SIZE - 1);
       if (error) throw error;
       const rows = (data ?? []) as MedicationListItem[];
@@ -60,7 +78,7 @@ async function fetchMedications(
       .from("total_medications")
       .select(select)
       .or(orFilter)
-      .order("medication_name", { ascending: true })
+      .order(orderColumn, { ascending: true })
       .range(offset, offset + PAGE_SIZE - 1);
     if (error) throw error;
     const rows = (data ?? []) as MedicationListItem[];

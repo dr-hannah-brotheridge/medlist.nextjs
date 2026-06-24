@@ -131,7 +131,7 @@ export default async function HomePage() {
                 <span className="block font-semibold text-slate-900">
                   {title}
                 </span>
-                <span className="block truncate text-sm text-slate-500">
+                <span className="block break-words text-sm text-slate-500">
                   {desc}
                 </span>
               </span>

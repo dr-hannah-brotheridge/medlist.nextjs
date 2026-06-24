@@ -37,7 +37,6 @@ function LoginForm() {
   const [remember, setRemember] = useState(true);
   const [magicSent, setMagicSent] = useState(false);
   const [magicMode, setMagicMode] = useState(false);
-  const [redirectUrl, setRedirectUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -93,7 +92,6 @@ function LoginForm() {
       setError(error.message);
       return;
     }
-    setRedirectUrl(redirectUrl);
     setMagicSent(true);
   }
 
@@ -104,17 +102,6 @@ function LoginForm() {
           <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700">
             If an account exists for {email.trim()}, a sign-in link is on its
             way. Tap the link in your inbox to sign in.
-          </p>
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-            <p className="text-xs font-medium text-slate-600">
-              The link will redirect to:
-            </p>
-            <p className="break-all text-xs text-slate-500">{redirectUrl}</p>
-          </div>
-          <p className="text-xs text-slate-500">
-            If the link doesn't work, make sure your Supabase dashboard has
-            this URL added under Authentication &rarr; URL Configuration
-            &rarr; Redirect URLs.
           </p>
           <button
             type="button"
